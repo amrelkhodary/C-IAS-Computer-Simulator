@@ -231,6 +231,26 @@ int cjumprmx(IAS* ias) {
 
 //add value in memory location X to AC
 int addmx(IAS* ias) {
-
     ias -> mbr -> register_value = ias -> m -> memory[ias -> mar -> register_value];
+    if((ias -> mbr -> register_value & NUMBER_VALUE_MASK) + (ias -> ac -> register_value & NUMBER_VALUE_MASK) > MAX_INTEGER) {
+        return INTEGER_OVERFLOW;
+    }
+
+    bool isnegative_mbr = isNegative(ias -> mbr -> register_value);
+    bool isnegative_ac = isNegative(ias -> ac -> register_value);
+    bool isbigger_mbr = ((ias -> mbr -> register_value & NUMBER_VALUE_MASK) >= (ias -> ac -> register_value & NUMBER_VALUE_MASK)) ? true : false;
+
+    ias -> ac -> register_value = (ias -> mbr -> register_value & NUMBER_VALUE_MASK) + (ias -> ac -> register_value & NUMBER_VALUE_MASK);
+
+    if(isnegative_ac && isnegative_mbr ||
+       isbigger_mbr && isnegative_mbr  ||
+       !isbigger_mbr && isnegative_ac) {
+        //sum will be negative
+        ias -> ac -> register_value = ias -> ac -> register_value | SIGN_BIT_POSITIVE_TO_NEGATIVE_MASK;
+    } else {
+        //sum will be positive
+        ias -> ac -> register_value = ias -> ac -> register_value & SIGN_BIT_NEGATIVE_TO_POSITIVE_MASK;
+    }
+
+    return SUCCESSFUL;
 }
