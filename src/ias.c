@@ -357,7 +357,21 @@ int rsh(IAS* ias) {
 
 //left shift AC by one bit (i.e. multiply by 2) 
 int lsh(IAS* ias) {
+    if((ias -> ac -> register_value & NUMBER_VALUE_MASK) >> 1 > MAX_INTEGER) {
+        return INTEGER_OVERFLOW;
+    }
 
+    bool isnegative = isNegative(ias -> ac -> register_value);
+
+    ias -> ac -> register_value = (ias -> ac -> register_value & NUMBER_VALUE_MASK) >> 1;
+
+    if(isnegative) {
+        ias -> ac -> register_value = ias -> ac -> register_value | SIGN_BIT_POSITIVE_TO_NEGATIVE_MASK;
+    } else {
+        ias -> ac -> register_value = ias -> ac -> register_value & SIGN_BIT_NEGATIVE_TO_POSITIVE_MASK;
+    }
+
+    return SUCCESSFUL;
 }
 
 //replace left address by 12 rightmost bits in AC
