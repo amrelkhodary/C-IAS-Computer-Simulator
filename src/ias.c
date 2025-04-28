@@ -118,15 +118,15 @@ word negative(word number) {
 
         IAS number word format: 1 sign bit + 39 bits
     */
+    bool is_negative = isNegative(number);
 
-    number = number & WORD_MASK;
-    
+    number = number & NUMBER_VALUE_MASK;
     number = ~number; //invert the bits
     number = number & WORD_MASK; //reapply mask since bit inversion would turn leftmost bits to 1
     number++;
     
     //update sign bit
-    if(!isNegative(number)) {
+    if(!is_negative) {
         number = number | SIGN_BIT_POSITIVE_TO_NEGATIVE_MASK;
     } else {
         number = number & SIGN_BIT_NEGATIVE_TO_POSITIVE_MASK;
@@ -227,4 +227,10 @@ int cjumprmx(IAS* ias) {
     ias -> mbr -> register_value = ias -> m -> memory[ias -> mar -> register_value];
     ias -> pc -> register_value = ias -> mbr -> register_value & RIGHT_ADDRESS_WORD_MASK;
     return SUCCESSFUL; 
+}
+
+//add value in memory location X to AC
+int addmx(IAS* ias) {
+
+    ias -> mbr -> register_value = ias -> m -> memory[ias -> mar -> register_value];
 }
