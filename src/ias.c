@@ -325,3 +325,47 @@ int subamx(IAS* ias) {
     }
     return SUCCESSFUL;
 }
+
+//multiply value from memory location X by AC, store most significant bits in AC, least significat in MQ
+int mulmx(IAS* ias) {
+
+}
+
+//divide AC by value from memory location X, put the the quotient in MQ, the remainder in AC
+int divmx(IAS* ias) {
+
+}
+
+//right shift AC by one bit (i.e. divide by 2)
+int rsh(IAS* ias) {
+    if((ias -> ac -> register_value & NUMBER_VALUE_MASK) >> 1 > MAX_INTEGER) {
+        return INTEGER_OVERFLOW;
+    }
+
+    bool isnegative = isNegative(ias -> ac -> register_value);
+
+    ias -> ac -> register_value = (ias -> ac -> register_value & NUMBER_VALUE_MASK) >> 1;
+
+    if(isnegative) {
+        ias -> ac -> register_value = ias -> ac -> register_value | SIGN_BIT_POSITIVE_TO_NEGATIVE_MASK;
+    } else {
+        ias -> ac -> register_value = ias -> ac -> register_value & SIGN_BIT_NEGATIVE_TO_POSITIVE_MASK;
+    }
+
+    return SUCCESSFUL;
+}
+
+//left shift AC by one bit (i.e. multiply by 2) 
+int lsh(IAS* ias) {
+
+}
+
+//replace left address by 12 rightmost bits in AC
+int storlmx(IAS* ias) {
+
+}
+
+//replace right address by 12 rightmost bits in AC
+int storrmx(IAS* ias) {
+
+}
