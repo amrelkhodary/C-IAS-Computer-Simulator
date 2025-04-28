@@ -281,7 +281,7 @@ int addamx(IAS* ias) {
 //subtract value in memory location X from AC
 int submx(IAS* ias) {
     ias -> mbr -> register_value = ias -> m -> memory[ias -> mar -> register_value];
-    if((ias -> mbr -> register_value & NUMBER_VALUE_MASK) - (ias -> ac -> register_value & NUMBER_VALUE_MASK) > MAX_INTEGER) {
+    if((ias -> ac -> register_value & NUMBER_VALUE_MASK) - (ias -> mbr -> register_value & NUMBER_VALUE_MASK) > MAX_INTEGER) {
         return INTEGER_OVERFLOW;
     }
 
@@ -306,7 +306,7 @@ int submx(IAS* ias) {
 //add absolute the value of a memory location X to AC
 int subamx(IAS* ias) {
     ias -> mbr -> register_value = absoluteval(ias -> m -> memory[ias -> mar -> register_value]);
-    if((ias -> mbr -> register_value & NUMBER_VALUE_MASK) + (ias -> ac -> register_value & NUMBER_VALUE_MASK) > MAX_INTEGER) {
+    if((ias -> ac -> register_value & NUMBER_VALUE_MASK) - (ias -> mbr -> register_value & NUMBER_VALUE_MASK) > MAX_INTEGER) {
         return INTEGER_OVERFLOW;
     }
 
@@ -315,13 +315,13 @@ int subamx(IAS* ias) {
 
     ias -> ac -> register_value = (ias -> ac -> register_value & NUMBER_VALUE_MASK) + (ias -> mbr -> register_value & NUMBER_VALUE_MASK);
 
-    if(!isnegative_ac || (isnegative_ac && !isbigger_ac)) {
-        //number will be positive
-        ias -> ac -> register_value = ias -> ac -> register_value & SIGN_BIT_NEGATIVE_TO_POSITIVE_MASK;
-    } else {
-        //number will be negative
-        ias -> ac -> register_value = ias -> ac -> register_value | SIGN_BIT_POSITIVE_TO_NEGATIVE_MASK;
+    if(isnegative_ac && isbigger_ac) {
+            //number will be negative
+            ias -> ac -> register_value = ias -> ac -> register_value | SIGN_BIT_POSITIVE_TO_NEGATIVE_MASK;
     }
-
+    else {
+            //number will be positive
+            ias -> ac -> register_value = ias -> ac -> register_value & SIGN_BIT_NEGATIVE_TO_POSITIVE_MASK;
+    }
     return SUCCESSFUL;
 }
