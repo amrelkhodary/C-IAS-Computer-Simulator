@@ -254,3 +254,25 @@ int addmx(IAS* ias) {
 
     return SUCCESSFUL;
 }
+
+int addamx(IAS* ias) {
+    ias -> mbr -> register_value = absoluteval(ias -> m -> memory[ias -> mar -> register_value]);
+    if((ias -> mbr -> register_value & NUMBER_VALUE_MASK) + (ias -> ac -> register_value & NUMBER_VALUE_MASK) > MAX_INTEGER) {
+        return INTEGER_OVERFLOW;
+    }
+
+    bool isnegative_ac = isNegative(ias -> ac -> register_value);
+    bool isbigger_ac = ((ias -> ac -> register_value & NUMBER_VALUE_MASK) >= (ias -> mbr -> register_value & NUMBER_VALUE_MASK)) ? true : false;
+
+    ias -> ac -> register_value = (ias -> ac -> register_value & NUMBER_VALUE_MASK) + (ias -> mbr -> register_value & NUMBER_VALUE_MASK);
+
+    if(!isnegative_ac || (isnegative_ac && !isbigger_ac)) {
+        //number will be positive
+        ias -> ac -> register_value = ias -> ac -> register_value & SIGN_BIT_NEGATIVE_TO_POSITIVE_MASK;
+    } else {
+        //number will be negative
+        ias -> ac -> register_value = ias -> ac -> register_value | SIGN_BIT_POSITIVE_TO_NEGATIVE_MASK;
+    }
+
+    return SUCCESSFUL;
+}
