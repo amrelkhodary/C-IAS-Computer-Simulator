@@ -1,5 +1,5 @@
-//TODO: implement arithmetic operations
-
+//TODO: Fix address mask bugs
+//TODO: Implement remaining operations
 #include <stdio.h>
 #include <stdlib.h>
 #include <unistd.h>
