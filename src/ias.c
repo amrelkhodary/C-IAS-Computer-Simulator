@@ -376,10 +376,24 @@ int lsh(IAS* ias) {
 
 //replace left address by 12 rightmost bits in AC
 int storlmx(IAS* ias) {
-
+    ias -> ac -> register_value = ias -> ac -> register_value & AC_ADDRESS_MASK;
+    ias -> ac -> register_value = ias -> ac -> register_value << 8;
+    ias -> mbr -> register_value = ias -> m -> memory[ias -> mar -> register_value];
+    ias -> mq -> register_value = ias -> mbr -> register_value;
+    ias -> mq -> register_value = ias -> mq -> register_value & (~LEFT_ADDRESS_WORD_MASK);
+    ias -> ac -> register_value = ias -> ac -> register_value | ias -> mq -> register_value;
+    ias -> m -> memory[ias -> mar -> register_value] = ias -> ac -> register_value;
+    return SUCCESSFUL; 
 }
 
 //replace right address by 12 rightmost bits in AC
 int storrmx(IAS* ias) {
-
+    ias -> ac -> register_value = ias -> ac -> register_value & AC_ADDRESS_MASK;
+    ias -> ac -> register_value = ias -> ac -> register_value << 28;
+    ias -> mbr -> register_value = ias -> m -> memory[ias -> mar -> register_value];
+    ias -> mq -> register_value = ias -> mbr -> register_value;
+    ias -> mq -> register_value = ias -> mq -> register_value & (~RIGHT_ADDRESS_WORD_MASK);
+    ias -> ac -> register_value = ias -> ac -> register_value | ias -> mq -> register_value;
+    ias -> m -> memory[ias -> mar -> register_value] = ias -> ac -> register_value;
+    return SUCCESSFUL; 
 }
