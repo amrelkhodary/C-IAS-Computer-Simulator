@@ -328,12 +328,49 @@ int subamx(IAS* ias) {
 
 //multiply value from memory location X by AC, store most significant bits in AC, least significat in MQ
 int mulmx(IAS* ias) {
+    //TODO: dumb implementation, should be replaced in the future
+    ias -> mbr -> register_value = ias -> m -> memory[ias -> mar -> register_value];
+    if((absoluteval(ias -> ac -> register_value) & NUMBER_VALUE_MASK) * (absoluteval(ias -> mbr -> register_value) & NUMBER_VALUE_MASK) > MAX_INTEGER) {
+        return INTEGER_OVERFLOW;
+    }
 
+    bool isnegative_ac = isNegative(ias -> ac -> register_value);
+    bool isnegative_mbr = isNegative(ias -> mbr -> register_value);
+
+    ias -> ac -> register_value = ((absoluteval(ias -> ac -> register_value) & NUMBER_VALUE_MASK) * (absoluteval(ias -> mbr -> register_value) & NUMBER_VALUE_MASK) & NUMBER_VALUE_MASK);
+
+    if((isnegative_ac && isnegative_mbr) || (!isnegative_ac && !isnegative_mbr)) {
+        //positive
+        ias -> ac -> register_value = ias -> ac -> register_value & SIGN_BIT_NEGATIVE_TO_POSITIVE_MASK;
+    } else {
+       ias -> ac -> register_value = ias -> ac -> register_value | SIGN_BIT_POSITIVE_TO_NEGATIVE_MASK;
+    }
+
+    return SUCCESSFUL;
 }
 
 //divide AC by value from memory location X, put the the quotient in MQ, the remainder in AC
 int divmx(IAS* ias) {
+    //TODO: Also dumb implementation, should also be replaced in the future
+    ias -> mbr -> register_value = ias -> m -> memory[ias -> mar -> register_value];
 
+    bool isnegative_ac = isNegative(ias -> ac -> register_value);
+    bool isnegative_mbr = isNegative(ias -> mbr -> register_value);
+
+    ias -> ac -> register_value = ((absoluteval(ias -> ac -> register_value) & NUMBER_VALUE_MASK) / (absoluteval(ias -> mbr -> register_value) & NUMBER_VALUE_MASK) & NUMBER_VALUE_MASK);
+    ias -> mq -> register_value = ((absoluteval(ias -> ac -> register_value) & NUMBER_VALUE_MASK) % (absoluteval(ias -> mbr -> register_value) & NUMBER_VALUE_MASK) & NUMBER_VALUE_MASK);
+
+    if((isnegative_ac && isnegative_mbr) || (!isnegative_ac && !isnegative_mbr)) {
+        //positive
+        ias -> ac -> register_value = ias -> ac -> register_value & SIGN_BIT_NEGATIVE_TO_POSITIVE_MASK;
+        ias -> mq -> register_value = ias -> mq -> register_value & SIGN_BIT_NEGATIVE_TO_POSITIVE_MASK;
+    } else {
+       //negative
+       ias -> ac -> register_value = ias -> ac -> register_value | SIGN_BIT_POSITIVE_TO_NEGATIVE_MASK;
+       ias -> mq -> register_value = ias -> mq -> register_value | SIGN_BIT_POSITIVE_TO_NEGATIVE_MASK;
+    }
+
+    return SUCCESSFUL;
 }
 
 //right shift AC by one bit (i.e. divide by 2)
