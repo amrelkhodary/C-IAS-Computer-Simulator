@@ -1,0 +1,34 @@
+#ifndef H_TESTS
+    #define H_TESTS
+    typedef enum Result {
+        TEST_SUCCESSFUL, 
+        TEST_FAILED 
+    } Result;
+
+    int runtests();
+    int test_isNegative(IAS* ias);
+    int test_negative(IAS* ias);
+    int test_absoluteval(IAS* ias);
+    int test_loadmq(IAS* ias);
+    int test_loadmqmx(IAS* ias);
+    int test_stormx(IAS* ias);
+    int test_loadmx(IAS* ias);
+    int test_loadnmx(IAS* ias);
+    int test_loadamx(IAS* ias);
+    int test_loadnamx(IAS* ias);
+    int test_jumplmx(IAS* ias);
+    int test_jumprmx(IAS* ias);
+    int test_cjumplmx(IAS* ias);
+    int test_cjumprmx(IAS* ias);
+    int test_addmx(IAS* ias);
+    int test_addamx(IAS* ias);
+    int test_submx(IAS* ias);
+    int test_subamx(IAS* ias);
+    int test_mulmx(IAS* ias);
+    int test_divmx(IAS* ias);
+    int test_lsh(IAS* ias);
+    int test_rsh(IAS* ias);
+    int test_storlmx(IAS* ias);
+    int test_storrmx(IAS* ias);
+
+#endif

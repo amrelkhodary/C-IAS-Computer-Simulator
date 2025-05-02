@@ -10,56 +10,6 @@
 #include <math.h>
 #include "../headers/ias.h"
 
-int main(int argc, char** argv) {
-    /*
-        program format
-        ias [filename] 
-    */
-
-    char WORKING_DIRECTORY[PATH_MAX];
-    char FILEPATH[PATH_MAX]; 
-    const char FORWARD_SLASH[1] = "/";
-    FILE* SOURCE_CODE = NULL;
-    Mode mode;
-    if(!getcwd(WORKING_DIRECTORY, sizeof(WORKING_DIRECTORY))) {
-        perror("FATAL: Could not get the current working directory.\n");
-    }
-
-    if(argc > 2) {
-        fprintf(stderr, "FATAL: Invalid arguments passed to IAS Simulator.\n");
-        return FATAL_INVALID_PROGRAM_ARGUMENTS;
-    } else if(argc == 2) {
-        //TODO: check if the file exists
-        mode = MODE_READ_FROM_SOURCE_FILE;
-        if(argv[1][0] == '/') {
-            //user passed an absolute path
-            strcpy(FILEPATH, argv[1]);
-            SOURCE_CODE = fopen(FILEPATH, 'r');
-            if(!SOURCE_CODE)  {
-                perror("FATAL: Failed to read source code.\n");
-                return FATAL_COULD_NOT_READ_SOURCE_CODE;
-            }          
-        } else {
-            //user passed a relative path
-            strcpy(FILEPATH, WORKING_DIRECTORY);
-            strcat(FILEPATH, FORWARD_SLASH);
-            strcat(FILEPATH, argv[1]);
-            
-            SOURCE_CODE = fopen(FILEPATH, 'r');
-            if(!SOURCE_CODE) {
-                perror("FATAL: Failed to read source code.\n");
-                return FATAL_COULD_NOT_READ_SOURCE_CODE;
-            }
-        }   
-    } else {
-        //user did not pass a file to the program, start in interactive mode
-        mode = MODE_INTERACTIVE;
-    }
-
-    IAS* ias = startIAS();
-    return 0;
-}
-
 IAS* startIAS() {
     IAS* ias = (IAS*) malloc(sizeof(IAS));
     PC* pc = (PC*) malloc(sizeof(PC));
@@ -73,22 +23,23 @@ IAS* startIAS() {
     m -> memory = (uint64_t*) calloc(4096, sizeof(uint64_t));
     if(!(ias && pc && ir && mar && mbr && ibr && ac && mq && m && m->memory)) {
         fprintf(stderr, "FATAL: Failed to start the IAS computer.\n");
-        return FATAL_FAILED_TO_START_IAS;
+        return NULL;
     }
 
-    pc -> register_value = 0;
+    pc -> register_value = (address)0;
     pc -> MASK = ADDRESS_MASK;
-    ir -> register_value = 0;
-    mar -> register_value = 0;
+    ir -> register_value = (opcode)0;
+    mar -> register_value = (address)0;
     mar -> MASk = ADDRESS_MASK;
-    mbr -> register_value = 0;
+    mbr -> register_value = (word)0;
     mbr -> MASK = WORD_MASK;
-    ibr -> register_value = 0;
+    ibr -> register_value = (opcode)0;
     ibr -> MASK = HALF_WORD_MASK;
-    ac -> register_value = 0;
+    ac -> register_value = (word)0;
     ac -> MASK = WORD_MASK;
-    mq -> register_value = 0;
+    mq -> register_value = (word)0;
     mq -> MASK = WORD_MASK;
+    ias -> ac = ac;
     ias -> pc = pc;
     ias -> ir = ir;
     ias -> mar = mar;
@@ -102,7 +53,7 @@ IAS* startIAS() {
 //check if a number is positive or negative
 bool isNegative(word number) {
     number = number & SIGN_BIT_MASK;
-    if(number == 0) {
+    if(number == (word)0) {
         return false;
     }
 
@@ -143,6 +94,11 @@ word absoluteval(word number) {
     }
 
     return number;
+}
+
+int setmem(IAS* ias, address adr, word value) {
+    ias -> m -> memory[adr] = value;
+    return SUCCESSFUL;
 }
 
 //transfer contents of MQ to AC
@@ -242,9 +198,9 @@ int addmx(IAS* ias) {
 
     ias -> ac -> register_value = (ias -> mbr -> register_value & NUMBER_VALUE_MASK) + (ias -> ac -> register_value & NUMBER_VALUE_MASK);
 
-    if(isnegative_ac && isnegative_mbr ||
-       isbigger_mbr && isnegative_mbr  ||
-       !isbigger_mbr && isnegative_ac) {
+    if((isnegative_ac && isnegative_mbr) ||
+       (isbigger_mbr && isnegative_mbr)  ||
+       (!isbigger_mbr && isnegative_ac)) {
         //sum will be negative
         ias -> ac -> register_value = ias -> ac -> register_value | SIGN_BIT_POSITIVE_TO_NEGATIVE_MASK;
     } else {
@@ -291,8 +247,8 @@ int submx(IAS* ias) {
 
     ias -> ac -> register_value = (ias -> mbr -> register_value & NUMBER_VALUE_MASK) + (ias -> ac -> register_value & NUMBER_VALUE_MASK);
 
-    if(!isnegative_ac && !isbigger_mbr ||
-        isnegative_ac && isbigger_mbr && !isnegative_mbr) {
+    if((!isnegative_ac && !isbigger_mbr) ||
+        (isnegative_ac && isbigger_mbr && !isnegative_mbr)) {
             //number will be positive
             ias -> ac -> register_value = ias -> ac -> register_value & SIGN_BIT_NEGATIVE_TO_POSITIVE_MASK;
         } else {
