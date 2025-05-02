@@ -1,5 +1,3 @@
-//TODO: Fix address mask bugs
-//TODO: Implement remaining operations
 #include <stdio.h>
 #include <stdlib.h>
 #include <unistd.h>
@@ -40,6 +38,7 @@ IAS* startIAS() {
     mq -> register_value = (word)0;
     mq -> MASK = WORD_MASK;
     ias -> ac = ac;
+    ias -> mq = mq;
     ias -> pc = pc;
     ias -> ir = ir;
     ias -> mar = mar;
