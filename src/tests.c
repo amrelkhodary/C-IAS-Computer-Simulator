@@ -174,15 +174,65 @@ int test_cjumprmx(IAS* ias) {
 
     return TEST_SUCCESSFUL;     
 }
-/*
-int test_addmx(IAS* ias)
-int test_addamx(IAS* ias)
-int test_submx(IAS* ias)
-int test_subamx(IAS* ias)
-int test_mulmx(IAS* ias)
-int test_divmx(IAS* ias)
-int test_lsh(IAS* ias)
-int test_rsh(IAS* ias)
-int test_storlmx(IAS* ias)
-int test_storrmx(IAS* ias)
-*/
+
+int test_arithmetic(IAS* ias) {
+    ias -> ac -> register_value = (word) 0;
+    ias -> mar -> register_value = (address) 0; //address contains value 10
+    
+    addmx(ias); //value now in ac supposed to be 10
+    addmx(ias); //value now in ac supposed to be 20
+    submx(ias); //value now in ac supposed to be 10
+    mulmx(ias); //value now in ac supposed to be 100
+    divmx(ias); //value now in ac supposed to be 10
+    lsh(ias); //value now in ac supposed to be 20
+    lsh(ias); //value now in ac supposed to be 40
+    rsh(ias); //value now in ac supposed to be 20
+
+    if(ias -> ac -> register_value != (word) 20) {
+        return TEST_FAILED;
+    } 
+
+    ias -> ac -> register_value = (word) 0;
+    ias -> m -> memory[ias -> mar -> register_value] = negative((word) 10);
+
+    addmx(ias); //value now in ac supposed to be -10 
+    addmx(ias); //value now in ac supposed to be -20
+    submx(ias); //value now in ac supposed to be -10
+    mulmx(ias); //value now in ac supposed to be 100
+    divmx(ias); //value now in ac supposed to be -10
+    lsh(ias); //value now in ac supposed to be -20
+    lsh(ias); //value now in ac supposed to be -40
+    rsh(ias); //value now in ac supposed to be -20 
+
+    if(ias -> ac -> register_value != negative((word)20)) {
+        return TEST_FAILED;
+    }
+
+    return TEST_SUCCESSFUL;
+}
+
+int test_storlmx(IAS* ias) {
+   ias -> ac -> register_value = (word) 0b0000000000000000000000000000000000000000000000000000000000000100;
+   ias -> mar -> register_value = (address) 30;
+   ias -> m -> memory[ias -> mar -> register_value] = (word) 0;
+   storlmx(ias);
+//
+   if(ias -> m -> memory[ias -> mar -> register_value] == (word) 0b0000000000000000000000000000000001000000000000000000000000000000) {
+        return TEST_SUCCESSFUL;
+   }
+
+   return TEST_FAILED;
+}
+
+int test_storrmx(IAS* ias) {
+   ias -> ac -> register_value = (word) 0b0000000000000000000000000000000000000000000000000000000000000100;
+   ias -> mar -> register_value = (address) 30;
+   ias -> m -> memory[ias -> mar -> register_value] = (word) 0;
+   storlmx(ias);
+//
+   if(ias -> m -> memory[ias -> mar -> register_value] == (word) 0b0000000000000000000000000000000000000000000000000100000000000000) {
+        return TEST_SUCCESSFUL;
+   }
+
+   return TEST_FAILED;
+}

@@ -20,14 +20,6 @@
     int test_jumprmx(IAS* ias);
     int test_cjumplmx(IAS* ias);
     int test_cjumprmx(IAS* ias);
-    int test_addmx(IAS* ias);
-    int test_addamx(IAS* ias);
-    int test_submx(IAS* ias);
-    int test_subamx(IAS* ias);
-    int test_mulmx(IAS* ias);
-    int test_divmx(IAS* ias);
-    int test_lsh(IAS* ias);
-    int test_rsh(IAS* ias);
     int test_storlmx(IAS* ias);
     int test_storrmx(IAS* ias);
 
