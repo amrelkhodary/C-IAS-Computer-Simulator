@@ -14,7 +14,9 @@ int runtests() {
     setmem(ias, (address)1, (word)20);
     setmem(ias, (address)2, (word)30);
 
-    int testsval = test_loadmqmx(ias) | test_loadmq(ias) | test_stormx(ias) | test_loadmx(ias) | test_isNegative(ias) | test_negative(ias);
+    int testsval = test_isNegative(ias) | test_negative(ias) | test_loadmq(ias) | test_loadmqmx(ias) | test_stormx(ias)
+                 | test_loadmx(ias) | test_loadamx(ias) | test_loadnamx(ias) | test_jumplmx(ias) | test_jumprmx(ias)
+                 | test_cjumplmx(ias) | test_cjumprmx(ias) | test_arithmetic(ias) | test_storlmx(ias) | test_storrmx(ias);
     if(testsval == 0) {
        printf("tests succeeded\n");
         
@@ -97,6 +99,7 @@ int test_loadamx(IAS* ias) {
         return TEST_SUCCESSFUL;
     }
 
+    printf("loadamx failed\n");
     return TEST_FAILED;
 }
 
@@ -108,6 +111,7 @@ int test_loadnamx(IAS* ias) {
         return TEST_SUCCESSFUL;
     }
 
+    printf("loadnamx failed\n");
     return TEST_FAILED;
 }
 
@@ -121,6 +125,7 @@ int test_jumplmx(IAS* ias) {
         return TEST_SUCCESSFUL;
     }
 
+    printf("jumplmx failed\n");
     return TEST_FAILED;
 }
 
@@ -134,6 +139,8 @@ int test_jumprmx(IAS* ias) {
         return TEST_SUCCESSFUL;
     }
 
+
+    printf("jumprmx failed\n");
     return TEST_FAILED;
 }
 
@@ -144,12 +151,16 @@ int test_cjumplmx(IAS* ias) {
     ias -> ac -> register_value = (word)1; //random nonnegative value
     cjumplmx(ias);
     if(ias -> pc -> register_value != (opcode) 0b00000101) {
+
+    printf("cjumplmx failed\n");
         return TEST_FAILED;
     }
     ias -> pc -> register_value = (address) 0;
     ias -> ac -> register_value = (word) negative(1);
     cjumplmx(ias);
     if(ias -> pc -> register_value != (opcode) 0b00000101) {
+
+    printf("cjumplmx failed\n");
         return TEST_FAILED;
     }
 
@@ -163,12 +174,15 @@ int test_cjumprmx(IAS* ias) {
     ias -> ac -> register_value = (word)1; //random nonnegative value
     cjumplmx(ias);
     if(ias -> pc -> register_value != (opcode) 0b00000110) {
+    printf("cjumprmx failed\n");
         return TEST_FAILED;
     }
     ias -> pc -> register_value = (address) 0;
     ias -> ac -> register_value = (word) negative(1);
     cjumplmx(ias);
     if(ias -> pc -> register_value != (opcode) 0b00000110) {
+
+    printf("cjumprmx failed\n");
         return TEST_FAILED;
     }
 
@@ -188,7 +202,10 @@ int test_arithmetic(IAS* ias) {
     lsh(ias); //value now in ac supposed to be 40
     rsh(ias); //value now in ac supposed to be 20
 
+
     if(ias -> ac -> register_value != (word) 20) {
+
+    printf("arithmeitc failed\n");
         return TEST_FAILED;
     } 
 
@@ -205,6 +222,8 @@ int test_arithmetic(IAS* ias) {
     rsh(ias); //value now in ac supposed to be -20 
 
     if(ias -> ac -> register_value != negative((word)20)) {
+
+    printf("arithmeitc failed\n");
         return TEST_FAILED;
     }
 
@@ -221,6 +240,7 @@ int test_storlmx(IAS* ias) {
         return TEST_SUCCESSFUL;
    }
 
+    printf("storlmx failed\n");
    return TEST_FAILED;
 }
 
@@ -234,5 +254,6 @@ int test_storrmx(IAS* ias) {
         return TEST_SUCCESSFUL;
    }
 
+    printf("storrmx failed\n");
    return TEST_FAILED;
 }

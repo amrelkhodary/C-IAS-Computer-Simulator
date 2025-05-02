@@ -22,5 +22,5 @@
     int test_cjumprmx(IAS* ias);
     int test_storlmx(IAS* ias);
     int test_storrmx(IAS* ias);
-
+    int test_arithmetic(IAS* ias);
 #endif
