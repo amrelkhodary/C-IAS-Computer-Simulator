@@ -1,3 +1,4 @@
+//TODO: Fix bugs in negative, isNegative, absoluteval, arithemtic1111111111111111111111111111111111101100
 #include <stdio.h>
 #include <stdlib.h>
 #include <unistd.h>
@@ -70,11 +71,10 @@ word negative(word number) {
     */
     bool is_negative = isNegative(number);
 
-    number = (word) number & NUMBER_VALUE_MASK;
     number = (word) ~number; //invert the bits
-    number = (word) number & WORD_MASK; //reapply mask since bit inversion would turn leftmost bits to 1
-    number = (word) (number + (word) 1);
-    
+    number = (word) (number + (word) 1); //add 1
+    number = (word) number & WORD_MASK; //reapply word mask
+
     //update sign bit
     if(!is_negative) {
         number = number | SIGN_BIT_POSITIVE_TO_NEGATIVE_MASK;
@@ -151,14 +151,17 @@ int loadnamx(IAS* ias) {
 //take instruction from the left half of memory location X
 int jumplmx(IAS* ias) {
     ias -> mbr -> register_value = ias -> m -> memory[ias -> mar -> register_value];
-    ias -> pc -> register_value = ias -> mbr -> register_value & LEFT_ADDRESS_WORD_MASK;
+    ias -> pc -> register_value = (ias -> mbr -> register_value & LEFT_ADDRESS_WORD_MASK) >> 20;
+    /*
+        0-7 8-19 20-27 28-39 
+    */
     return SUCCESSFUL;
 }
 
 //take instruction from the right half of memory location X
 int jumprmx(IAS* ias) {
     ias -> mbr -> register_value = ias -> m -> memory[ias -> mar -> register_value];
-    ias -> pc -> register_value = ias -> mbr -> register_value & RIGHT_ADDRESS_WORD_MASK;
+    ias -> pc -> register_value = (ias -> mbr -> register_value & RIGHT_ADDRESS_WORD_MASK);
     return SUCCESSFUL;
 }
 
@@ -355,7 +358,7 @@ int lsh(IAS* ias) {
 
     bool isnegative = isNegative(ias -> ac -> register_value);
 
-    ias -> ac -> register_value = (ias -> ac -> register_value & NUMBER_VALUE_MASK) >> 1;
+    ias -> ac -> register_value = (ias -> ac -> register_value & NUMBER_VALUE_MASK) << 1;
 
     if(isnegative) {
         ias -> ac -> register_value = ias -> ac -> register_value | SIGN_BIT_POSITIVE_TO_NEGATIVE_MASK;
