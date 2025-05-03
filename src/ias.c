@@ -70,10 +70,10 @@ word negative(word number) {
     */
     bool is_negative = isNegative(number);
 
-    number = number & NUMBER_VALUE_MASK;
-    number = ~number; //invert the bits
-    number = number & WORD_MASK; //reapply mask since bit inversion would turn leftmost bits to 1
-    number++;
+    number = (word) number & NUMBER_VALUE_MASK;
+    number = (word) ~number; //invert the bits
+    number = (word) number & WORD_MASK; //reapply mask since bit inversion would turn leftmost bits to 1
+    number = (word) (number + (word) 1);
     
     //update sign bit
     if(!is_negative) {

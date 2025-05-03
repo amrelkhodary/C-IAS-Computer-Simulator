@@ -104,10 +104,10 @@ int test_loadamx(IAS* ias) {
 }
 
 int test_loadnamx(IAS* ias) {
-     word positive_number = (word)0b0000000000000000000000000000000000000000000000000000000000000011;
+    word positive_number = (word)0b0000000000000000000000000000000000000000000000000000000000000011;
     word negative_number = (word)0b0000000000000000000000001000000000000000000000000000000000000011; 
 
-    if(isNegative(absoluteval(positive_number)) && isNegative(absoluteval(negative_number))) {
+    if(isNegative(negative(absoluteval(positive_number))) && negative(isNegative(absoluteval(negative_number)))) {
         return TEST_SUCCESSFUL;
     }
 
