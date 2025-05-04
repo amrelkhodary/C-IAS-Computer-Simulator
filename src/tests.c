@@ -241,7 +241,20 @@ int test_arithmetic(IAS* ias) {
         printf("6: mulmx failed, expected -1000, found -%li\n", absoluteval(ias -> ac -> register_value));
         return TEST_FAILED;
     }
-    
+    //test divmx
+    ias -> ac -> register_value = 4;
+    ias -> m -> memory[ias -> mar -> register_value] = (word) 2;
+    divmx(ias); //ac = 2
+    if(ias -> ac -> register_value != (word) 2) {
+        printf("7: divmx failed, expected 2, found %li\n", ias -> ac -> register_value);
+        return TEST_FAILED;
+    }
+    ias -> ac -> register_value = 4;
+    ias -> m -> memory[ias -> mar -> register_value] = negative((word) 2);
+    divmx(ias); //ac = -2
+    if(ias -> ac -> register_value != negative((word) 2))  {
+        printf("8: divmx failed, expected -2, found -%li\n", ias -> ac -> register_value);
+    }
     return TEST_SUCCESSFUL;
 }
 
