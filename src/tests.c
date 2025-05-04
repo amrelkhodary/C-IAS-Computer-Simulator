@@ -190,32 +190,39 @@ int test_cjumprmx(IAS* ias) {
 }
 
 int test_arithmetic(IAS* ias) {
-    //test case with all positive numbers
+    ias -> mar -> register_value = (address) 100;
+    ias -> m -> memory[ias -> mar -> register_value] = (word) 10;
+
+    //test addmx
     ias -> ac -> register_value = 0;
-    ias -> m -> memory[(address) 0] = (word) 10;
-    ias -> mar -> register_value = (address) 0;
     addmx(ias); //ac = 10
-    addmx(ias); //ac = 20
+    if(ias -> ac -> register_value != (word) 10) {
+        printf("1: addmx failed, expected 10, found %li\n", ias -> ac -> register_value);
+        return TEST_FAILED;
+    }
+    ias -> m -> memory[ias -> mar -> register_value] = negative((word) 10);
+    ias -> ac -> register_value = 0;
+    addmx(ias); //ac = -10
+    addmx(ias); //ac = -20
+    if(ias -> ac -> register_value != negative((word) 20)) {
+        printf("2: addmx failed, expected -20, found -%li\n", absoluteval(ias -> ac -> register_value));
+        return TEST_FAILED;
+    }
+    //test submx
+    ias -> ac -> register_value = 0;
+    ias -> m -> memory[ias -> mar -> register_value] = 10;
+    submx(ias); //ac = -10
+    if(ias -> ac -> register_value != negative((word) 10)) {
+       printf("3: submx failed, expected -10, found -%li\n", absoluteval(ias -> ac -> register_value));
+       return TEST_FAILED; 
+    }
+    ias -> ac -> register_value = 0;
+    ias -> m -> memory[ias -> mar -> register_value] = negative((word) 10);
     submx(ias); //ac = 10
     if(ias -> ac -> register_value != (word) 10) {
-        printf("positive arithmetic failed, expected 10, actual: %li\n", ias -> ac -> register_value);
+        printf("4: submx failed, expected 10, found -%li\n", absoluteval(ias -> ac -> register_value));
         return TEST_FAILED;
     }
-    ias -> ac -> register_value = 0;
-
-    //test case with negative numbers
-    ias -> m -> memory[(address) 0] = (word) negative((word) 10);
-    ias -> mar -> register_value = (address) 0;
-    submx(ias); //ac = 10
-    submx(ias); //ac = 20
-    submx(ias); //ac = 30
-    //submx(ias); // ac = -30 -(-10) = -30 + 10 = -20
-    if (ias->ac->register_value != (word) 30)
-    {
-        printf("negative arithmetic failed, expected 30, actual: %li\n", absoluteval(ias -> ac -> register_value));
-        return TEST_FAILED;
-    }
-
     return TEST_SUCCESSFUL;
 }
 

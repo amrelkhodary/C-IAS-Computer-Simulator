@@ -173,13 +173,49 @@ int cjumprmx(IAS* ias) {
 
 //add value in memory location X to AC
 int addmx(IAS* ias) {
+    //store the number to add to AC in MBR
+    ias -> mbr -> register_value = ias -> m -> memory[ias -> mar -> register_value];
 
+    //keep track of the sizes and negativity of the values in AC and MBR to determine sign bit 
+    bool mbr_isnegative = isNegative(ias -> mbr -> register_value);
+    bool ac_isnegative = isNegative(ias -> ac -> register_value);
+    bool ac_isbigger = (absoluteval(ias -> ac -> register_value) >= absoluteval(ias -> mbr -> register_value)) ? true : false;
+
+    //add the two numbers (we don't have to do any conversions since two's complement representation handles addition)
+    ias -> ac -> register_value = (ias -> ac -> register_value & NUMBER_VALUE_MASK) + (ias -> mbr -> register_value & NUMBER_VALUE_MASK);
+
+    //determine sign bit
+    if((ac_isbigger && !ac_isnegative) || (!ac_isbigger && !mbr_isnegative)) {
+        //result will be positive
+        ias -> ac -> register_value = ias -> ac -> register_value & SIGN_BIT_NEGATIVE_TO_POSITIVE_MASK;
+    } else {
+        //result will be negative
+        ias -> ac -> register_value = ias -> ac -> register_value | SIGN_BIT_POSITIVE_TO_NEGATIVE_MASK;
+    }
     return SUCCESSFUL;
 }
 
 //add absolute the value of a memory location X to AC
 int addamx(IAS* ias) {
+    //store the number to add to AC in MBR
+    ias -> mbr -> register_value = absoluteval(ias -> m -> memory[ias -> mar -> register_value]);
 
+    //keep track of the sizes and negativity of the values in AC and MBR to determine sign bit later
+    bool mbr_isnegative = isNegative(ias -> mbr -> register_value);
+    bool ac_isnegative = isNegative(ias -> ac -> register_value);
+    bool ac_isbigger = (absoluteval(ias -> ac -> register_value) >= absoluteval(ias -> mbr -> register_value)) ? true : false;
+
+    //add the two numbers (we don't have to do any conversions since two's complement representation handles addition)
+    ias -> ac -> register_value = (ias -> ac -> register_value & NUMBER_VALUE_MASK) + (ias -> mbr -> register_value & NUMBER_VALUE_MASK);
+
+    //determine sign bit
+    if((ac_isbigger && !ac_isnegative) || (!ac_isbigger && !mbr_isnegative)) {
+        //result will be positive
+        ias -> ac -> register_value = ias -> ac -> register_value & SIGN_BIT_NEGATIVE_TO_POSITIVE_MASK;
+    } else {
+        //result will be negative
+        ias -> ac -> register_value = ias -> ac -> register_value | SIGN_BIT_POSITIVE_TO_NEGATIVE_MASK;
+    }
     return SUCCESSFUL;
 }
 
@@ -220,7 +256,37 @@ int submx(IAS* ias) {
 
 //add absolute the value of a memory location X to AC
 int subamx(IAS* ias) {
-    return 0;
+    /*
+        how to subtract numbers in two's complement
+        A - B
+       =A + (-B)
+    */
+
+    //get the number to subtract from AC from memory and store it in MBR
+    ias -> mbr -> register_value = absoluteval(ias -> m -> memory[ias -> mar -> register_value]);
+
+    //remember whether the value was negative or positive to maintain sign bit
+    bool mbr_isnegative = isNegative(ias -> mbr -> register_value);
+    //convert the number to negative using two's complement
+    ias -> mbr -> register_value = negative(ias -> mbr -> register_value);
+
+    //keep track of who's bigger and who's negative to maintain sign bit
+    bool ac_isbigger = (absoluteval(ias -> ac -> register_value) >= absoluteval(ias -> mbr -> register_value)) ? true : false;
+    bool ac_isnegative = isNegative(ias -> ac -> register_value);
+    mbr_isnegative = !mbr_isnegative;
+
+    //add the values in mbr and ac
+    ias -> ac -> register_value = (ias -> ac -> register_value & NUMBER_VALUE_MASK) + (ias -> mbr -> register_value & NUMBER_VALUE_MASK);
+
+    if((ac_isbigger && !ac_isnegative) || (!ac_isbigger && !mbr_isnegative)) {
+        //result will be positive
+        ias -> ac -> register_value = ias -> ac -> register_value & SIGN_BIT_NEGATIVE_TO_POSITIVE_MASK;
+    } else {
+        //result will be negative
+        ias -> ac -> register_value = ias -> ac -> register_value | SIGN_BIT_POSITIVE_TO_NEGATIVE_MASK;
+    }
+
+    return SUCCESSFUL;
 }
 
 //multiply value from memory location X by AC, store most significant bits in AC, least significat in MQ
