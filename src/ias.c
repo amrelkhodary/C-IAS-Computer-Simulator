@@ -50,6 +50,81 @@ IAS* startIAS() {
     return ias;
 }
 
+//get the next instruction from memory
+int fetch(IAS* ias) {
+
+    return SUCCESSFUL;
+}
+
+//execute a program instruction
+int execute(IAS* ias) {
+    int RETURN_VALUE = 0;
+    if(ias -> ir -> register_value == LOAD_MQ) {
+        RETURN_VALUE = loadmq(ias);
+    }
+    else if(ias -> ir -> register_value == LOAD_MQ_MX) {
+        RETURN_VALUE = loadmqmx(ias);
+    }
+    else if(ias -> ir -> register_value == STOR_MX) {
+        RETURN_VALUE = stormx(ias);
+    }
+    else if(ias -> ir -> register_value == LOAD_MX) {
+        RETURN_VALUE = loadmx(ias);
+    }
+    else if(ias -> ir -> register_value == LOAD_nMX) {
+        RETURN_VALUE = loadnmx(ias);
+    }
+    else if(ias -> ir -> register_value == LOAD_naMX) {
+        RETURN_VALUE = loadnamx(ias);
+    }
+    else if(ias -> ir -> register_value == JUMP_lMX) {
+        RETURN_VALUE = jumplmx(ias);
+    }
+    else if(ias -> ir -> register_value == JUMP_rMX) {
+        RETURN_VALUE = jumprmx(ias);
+    }
+    else if(ias -> ir -> register_value == CJUMP_lMX) {
+        RETURN_VALUE = cjumplmx(ias);
+    }
+    else if(ias -> ir ->register_value == CJUMP_rMX) {
+        RETURN_VALUE = cjumprmx(ias);
+    }
+    else if(ias -> ir -> register_value == ADD_MX) {
+        RETURN_VALUE = addmx(ias);
+    }
+    else if(ias -> ir -> register_value == ADD_aMX) {
+        RETURN_VALUE = addamx(ias);
+    }
+    else if(ias -> ir -> register_value == SUB_MX) {
+        RETURN_VALUE = submx(ias);
+    }
+    else if(ias -> ir -> register_value == SUB_aMX) {
+        RETURN_VALUE = subamx(ias);
+    }
+    else if(ias -> ir -> register_value == MUL_MX) {
+        RETURN_VALUE = mulmx(ias);
+    }
+    else if(ias -> ir -> register_value == DIV_MX) {
+        RETURN_VALUE = divmx(ias);
+    }
+    else if(ias -> ir -> register_value == LSH) {
+        RETURN_VALUE = lsh(ias);
+    }
+    else if(ias -> ir -> register_value == RSH) {
+        RETURN_VALUE = rsh(ias);
+    }
+    else if(ias -> ir -> register_value == STOR_lMX) {
+        RETURN_VALUE = storlmx(ias);
+    }
+    else if(ias -> ir -> register_value == STOR_rMX) {
+        RETURN_VALUE = storrmx(ias);
+    }
+    else {
+        return UNRECOGNIZED_COMMAND;
+    }
+    return RETURN_VALUE;
+}
+
 //check if a number is positive or negative
 bool isNegative(word number) {
     number = number & SIGN_BIT_MASK;
