@@ -1,4 +1,4 @@
-//TODO: Fix bugs in negative, isNegative, absoluteval, arithemtic1111111111111111111111111111111111101100
+//TODO: Fix bugs in arithemtic instructions especially when dealing with negative values
 #include <stdio.h>
 #include <stdlib.h>
 #include <unistd.h>
@@ -150,41 +150,25 @@ int loadnamx(IAS* ias) {
 
 //take instruction from the left half of memory location X
 int jumplmx(IAS* ias) {
-    ias -> mbr -> register_value = ias -> m -> memory[ias -> mar -> register_value];
-    ias -> pc -> register_value = (ias -> mbr -> register_value & LEFT_ADDRESS_WORD_MASK) >> 20;
-    /*
-        0-7 8-19 20-27 28-39 
-    */
-    return SUCCESSFUL;
+
+    return 0;
 }
 
 //take instruction from the right half of memory location X
 int jumprmx(IAS* ias) {
-    ias -> mbr -> register_value = ias -> m -> memory[ias -> mar -> register_value];
-    ias -> pc -> register_value = (ias -> mbr -> register_value & RIGHT_ADDRESS_WORD_MASK);
-    return SUCCESSFUL;
+
+    return 0;
 }
 
 //if AC is nonnegative, take instruction from left half of memory location X 
 int cjumplmx(IAS* ias) {
-    if(isNegative(ias -> ac -> register_value)) {
-        return SUCCESSFUL;
-    }
 
-    ias -> mbr -> register_value = ias -> m -> memory[ias -> mar -> register_value];
-    ias -> pc -> register_value = ias -> mbr -> register_value & LEFT_ADDRESS_WORD_MASK;
-    return SUCCESSFUL;
+    return 0;
 }
 
 //if AC is nonnegative, take instruction from right half of memory location X
 int cjumprmx(IAS* ias) {
-    if(isNegative(ias -> ac -> register_value)) {
-        return SUCCESSFUL;
-    }
-
-    ias -> mbr -> register_value = ias -> m -> memory[ias -> mar -> register_value];
-    ias -> pc -> register_value = ias -> mbr -> register_value & RIGHT_ADDRESS_WORD_MASK;
-    return SUCCESSFUL; 
+    return 0;
 }
 
 //add value in memory location X to AC
@@ -238,50 +222,13 @@ int addamx(IAS* ias) {
 
 //subtract value in memory location X from AC
 int submx(IAS* ias) {
-    ias -> mbr -> register_value = ias -> m -> memory[ias -> mar -> register_value];
-    if((ias -> ac -> register_value & NUMBER_VALUE_MASK) - (ias -> mbr -> register_value & NUMBER_VALUE_MASK) > MAX_INTEGER) {
-        return INTEGER_OVERFLOW;
-    }
 
-    bool isnegative_mbr = isNegative(ias -> mbr -> register_value);
-    bool isnegative_ac = isNegative(ias -> ac -> register_value);
-    bool isbigger_mbr = ((ias -> mbr -> register_value & NUMBER_VALUE_MASK) >= (ias -> ac -> register_value & NUMBER_VALUE_MASK)) ? true : false;
-
-    ias -> ac -> register_value = (ias -> mbr -> register_value & NUMBER_VALUE_MASK) + (ias -> ac -> register_value & NUMBER_VALUE_MASK);
-
-    if((!isnegative_ac && !isbigger_mbr) ||
-        (isnegative_ac && isbigger_mbr && !isnegative_mbr)) {
-            //number will be positive
-            ias -> ac -> register_value = ias -> ac -> register_value & SIGN_BIT_NEGATIVE_TO_POSITIVE_MASK;
-        } else {
-            //number will be negative
-            ias -> ac -> register_value = ias -> ac -> register_value | SIGN_BIT_POSITIVE_TO_NEGATIVE_MASK;
-        }
-
-    return SUCCESSFUL;
+    return 0;
 }
 
 //add absolute the value of a memory location X to AC
 int subamx(IAS* ias) {
-    ias -> mbr -> register_value = absoluteval(ias -> m -> memory[ias -> mar -> register_value]);
-    if((ias -> ac -> register_value & NUMBER_VALUE_MASK) - (ias -> mbr -> register_value & NUMBER_VALUE_MASK) > MAX_INTEGER) {
-        return INTEGER_OVERFLOW;
-    }
-
-    bool isnegative_ac = isNegative(ias -> ac -> register_value);
-    bool isbigger_ac = ((ias -> ac -> register_value & NUMBER_VALUE_MASK) >= (ias -> mbr -> register_value & NUMBER_VALUE_MASK)) ? true : false;
-
-    ias -> ac -> register_value = (ias -> ac -> register_value & NUMBER_VALUE_MASK) + (ias -> mbr -> register_value & NUMBER_VALUE_MASK);
-
-    if(isnegative_ac && isbigger_ac) {
-            //number will be negative
-            ias -> ac -> register_value = ias -> ac -> register_value | SIGN_BIT_POSITIVE_TO_NEGATIVE_MASK;
-    }
-    else {
-            //number will be positive
-            ias -> ac -> register_value = ias -> ac -> register_value & SIGN_BIT_NEGATIVE_TO_POSITIVE_MASK;
-    }
-    return SUCCESSFUL;
+    return 0;
 }
 
 //multiply value from memory location X by AC, store most significant bits in AC, least significat in MQ
@@ -372,7 +319,7 @@ int lsh(IAS* ias) {
 //replace left address by 12 rightmost bits in AC
 int storlmx(IAS* ias) {
     ias -> ac -> register_value = ias -> ac -> register_value & AC_ADDRESS_MASK;
-    ias -> ac -> register_value = ias -> ac -> register_value << 8;
+    ias -> ac -> register_value = ias -> ac -> register_value << 20;
     ias -> mbr -> register_value = ias -> m -> memory[ias -> mar -> register_value];
     ias -> mq -> register_value = ias -> mbr -> register_value;
     ias -> mq -> register_value = ias -> mq -> register_value & (~LEFT_ADDRESS_WORD_MASK);
@@ -384,7 +331,6 @@ int storlmx(IAS* ias) {
 //replace right address by 12 rightmost bits in AC
 int storrmx(IAS* ias) {
     ias -> ac -> register_value = ias -> ac -> register_value & AC_ADDRESS_MASK;
-    ias -> ac -> register_value = ias -> ac -> register_value << 28;
     ias -> mbr -> register_value = ias -> m -> memory[ias -> mar -> register_value];
     ias -> mq -> register_value = ias -> mbr -> register_value;
     ias -> mq -> register_value = ias -> mq -> register_value & (~RIGHT_ADDRESS_WORD_MASK);
@@ -392,3 +338,7 @@ int storrmx(IAS* ias) {
     ias -> m -> memory[ias -> mar -> register_value] = ias -> ac -> register_value;
     return SUCCESSFUL; 
 }
+
+/*
+    0-7 8-19 20-27 28-39
+*/

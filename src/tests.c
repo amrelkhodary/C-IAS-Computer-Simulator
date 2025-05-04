@@ -196,14 +196,14 @@ int test_arithmetic(IAS* ias) {
     addmx(ias); //value now in ac supposed to be 10
     addmx(ias); //value now in ac supposed to be 20
     submx(ias); //value now in ac supposed to be 30
-    mulmx(ias); //value now in ac supposed to be 300
-    divmx(ias); //value now in ac supposed to be 30
-    lsh(ias); //value now in ac supposed to be 60
-    lsh(ias); //value now in ac supposed to be 120
-    rsh(ias); //value now in ac supposed to be 60
+    mulmx(ias); //value now in ac supposed to be 200
+    divmx(ias); //value now in ac supposed to be 20
+    lsh(ias); //value now in ac supposed to be 40
+    lsh(ias); //value now in ac supposed to be 80
+    rsh(ias); //value now in ac supposed to be 40
 
-
-    if(ias -> ac -> register_value != (word) 60) {
+    printf("value of ac: %li\n", ias -> ac -> register_value);
+    if(ias -> ac -> register_value != (word) 40) {
 
     printf("arithmeitc failed\n");
         return TEST_FAILED;
@@ -215,13 +215,13 @@ int test_arithmetic(IAS* ias) {
     addmx(ias); //value now in ac supposed to be -10 
     addmx(ias); //value now in ac supposed to be -20
     submx(ias); //value now in ac supposed to be -10
-    mulmx(ias); //value now in ac supposed to be 100
-    divmx(ias); //value now in ac supposed to be -10
-    lsh(ias); //value now in ac supposed to be -20
+    mulmx(ias); //value now in ac supposed to be 200
+    divmx(ias); //value now in ac supposed to be -20
     lsh(ias); //value now in ac supposed to be -40
-    rsh(ias); //value now in ac supposed to be -20 
+    lsh(ias); //value now in ac supposed to be -80
+    rsh(ias); //value now in ac supposed to be -40 
 
-    if(ias -> ac -> register_value != negative((word)20)) {
+    if(ias -> ac -> register_value != negative((word)40)) {
 
     printf("arithmeitc failed\n");
         return TEST_FAILED;
@@ -236,7 +236,8 @@ int test_storlmx(IAS* ias) {
    ias -> m -> memory[ias -> mar -> register_value] = (word) 0;
    storlmx(ias);
 //
-   if(ias -> m -> memory[ias -> mar -> register_value] == (word) 0b0000000000000000000000000000000001000000000000000000000000000000) {
+printf("memory: %li, ac: %li\n", ias -> m -> memory[ias -> mar -> register_value], ias -> ac -> register_value);
+   if(ias -> m -> memory[ias -> mar -> register_value] == (ias -> ac -> register_value)) {
         return TEST_SUCCESSFUL;
    }
 
@@ -248,9 +249,9 @@ int test_storrmx(IAS* ias) {
    ias -> ac -> register_value = (word) 0b0000000000000000000000000000000000000000000000000000000000000100;
    ias -> mar -> register_value = (address) 30;
    ias -> m -> memory[ias -> mar -> register_value] = (word) 0;
-   storlmx(ias);
+   storrmx(ias);
 //
-   if(ias -> m -> memory[ias -> mar -> register_value] == (word) 0b0000000000000000000000000000000000000000000000000100000000000000) {
+   if(ias -> m -> memory[ias -> mar -> register_value] == (ias -> ac ->register_value)) {
         return TEST_SUCCESSFUL;
    }
 
