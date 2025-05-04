@@ -291,11 +291,41 @@ int subamx(IAS* ias) {
 
 //multiply value from memory location X by AC, store most significant bits in AC, least significat in MQ
 int mulmx(IAS* ias) {
+    /*
+        WARNING: This is the not the way the IAS computer actually implemented multiplication
+    */
+
+    //get value to be multiplied by AC from memory and store it in MBR
+    ias -> mbr -> register_value = ias -> m -> memory[ias -> mar -> register_value];
+
+    //keep track of the negativity of the values in AC and MBR to maintain the sign bit later
+    bool isnegative_ac = isNegative(ias -> ac -> register_value);
+    bool isnegative_mbr = isNegative(ias -> mbr -> register_value);
+
+    //make sure the multiplication would NOT result in overflow
+    if((absoluteval(ias -> ac -> register_value) & NUMBER_VALUE_MASK) * (absoluteval(ias -> mbr -> register_value) & NUMBER_VALUE_MASK) > MAX_INTEGER) {
+        return INTEGER_OVERFLOW;
+    }
+
+    //multiply the values 
+    ias -> ac -> register_value = (absoluteval(ias -> ac -> register_value) & NUMBER_VALUE_MASK) * (absoluteval(ias -> mbr -> register_value) & NUMBER_VALUE_MASK);
+
+    //determine sign bit
+    if((isnegative_ac && isnegative_mbr) || (!isnegative_ac && !isnegative_mbr)) {
+        //result will be positive
+        ias -> ac -> register_value = ias -> ac -> register_value & SIGN_BIT_NEGATIVE_TO_POSITIVE_MASK;
+    } else {
+        //result will be negative
+        ias -> ac -> register_value = negative(ias -> ac -> register_value);
+        ias -> ac -> register_value = ias -> ac -> register_value | SIGN_BIT_POSITIVE_TO_NEGATIVE_MASK;
+    }
+
     return SUCCESSFUL;
 }
 
 //divide AC by value from memory location X, put the the quotient in MQ, the remainder in AC
 int divmx(IAS* ias) {
+
     return SUCCESSFUL;
 }
 

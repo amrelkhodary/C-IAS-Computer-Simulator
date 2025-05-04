@@ -223,6 +223,25 @@ int test_arithmetic(IAS* ias) {
         printf("4: submx failed, expected 10, found -%li\n", absoluteval(ias -> ac -> register_value));
         return TEST_FAILED;
     }
+    //test mulmx
+    ias -> ac -> register_value = 0;
+    ias -> m -> memory[ias -> mar -> register_value] = (word) 10;
+    addmx(ias); //ac = 10
+    mulmx(ias); //ac = 100
+    if(ias -> ac -> register_value != (word) 100) {
+        printf("5: mulmx failed, expected 100, found %li\n", ias -> ac -> register_value);
+        return TEST_FAILED;
+    }
+    ias -> ac -> register_value = 0;
+    ias -> m -> memory[ias -> mar -> register_value] = negative((word)10);
+    addmx(ias); //ac = -10
+    mulmx(ias); //ac = 100
+    mulmx(ias); //ac -1000
+    if(ias -> ac -> register_value != negative((word) 1000)) {
+        printf("6: mulmx failed, expected -1000, found -%li\n", absoluteval(ias -> ac -> register_value));
+        return TEST_FAILED;
+    }
+    
     return TEST_SUCCESSFUL;
 }
 
