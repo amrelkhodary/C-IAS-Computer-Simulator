@@ -173,7 +173,7 @@ int cjumprmx(IAS* ias) {
 
 //add value in memory location X to AC
 int addmx(IAS* ias) {
-    
+
     return SUCCESSFUL;
 }
 
@@ -295,5 +295,5 @@ int storrmx(IAS* ias) {
 }
 
 /*
-    0-7 8-19 20-27 28-39
+     0-7 8-19 20-27 28-39
 */
