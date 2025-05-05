@@ -50,6 +50,17 @@ IAS* startIAS() {
     return ias;
 }
 
+//this functions runs the program that was loaded to memory
+int run(IAS* ias) {
+    int exec_return_val = -1;
+    while(exec_return_val != UNRECOGNIZED_COMMAND) {
+        fetch(ias);
+        exec_return_val = execute(ias);
+    }
+
+    return SUCCESSFUL;
+}
+
 /*
     the purpose of the fetch cycle in IAS is to 
     1- put the next instruction in IR

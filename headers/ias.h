@@ -116,6 +116,9 @@
 
     //function headers
     IAS* startIAS();
+    int run(IAS* ias);
+    int fetch(IAS* ias);
+    int execute(IAS* ias);
     bool isNegative(word number);
     word negative(word number);
     word absoluteval(word number);
