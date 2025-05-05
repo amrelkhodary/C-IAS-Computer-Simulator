@@ -47,7 +47,8 @@ const word RIGHT_ADDRESS_WORD_MASK            = (word)     0b0000000000000000000
 const word LEFT_INSTRUCTION_WORD_MASK         = (word)     0b0000000000000000000000001111111100000000000000000000000000000000; //mask used to extract the left instruction from a 40 bit word
 const word RIGHT_INSTRUCTION_WORD_MASK        = (word)     0b0000000000000000000000000000000000000000000011111111000000000000; //mask used to extract the right instruction from a 40 bit word
 const word AC_ADDRESS_MASK                    = (word)     0b0000000000000000000000000000000000000000000000000000111111111111; //mask used to extract the 12 rightmost bits from AC
-
+const word RIGHT_HALF_WORD_MASK               = (word)     0b0000000000000000000000000000000000000000000011111111111111111111; //mask used to extract the right half of a word
+const word LEFT_HALF_WORD_MASK                = (word)     0b0000000000000000000000001111111111111111111100000000000000000000; //mask used to extract the left half of a word
 const uint64_t MAX_INTEGER = (uint64_t) 549755813887; //the max number that could be represented by a 40-bit word that uses a sign bit and two's complement for negative numbers
 const bool IGNORE_OVERFLOW = true;
 const bool DONT_IGNORE_OVERFLOW = false;

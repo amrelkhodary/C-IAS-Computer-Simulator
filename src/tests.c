@@ -15,8 +15,8 @@ int runtests() {
     setmem(ias, (address)2, (word)30);
 
     int testsval = test_isNegative(ias) | test_negative(ias) | test_loadmq(ias) | test_loadmqmx(ias) | test_stormx(ias)
-                 | test_loadmx(ias) | test_loadamx(ias) | test_loadnamx(ias) | test_jumplmx(ias) | test_jumprmx(ias)
-                 | test_cjumplmx(ias) | test_cjumprmx(ias) | test_arithmetic(ias) | test_storlmx(ias) | test_storrmx(ias);
+                 | test_loadmx(ias) | test_loadamx(ias) | test_loadnamx(ias) | test_jump(ias) |
+                 test_arithmetic(ias) | test_storlmx(ias) | test_storrmx(ias);
     if(testsval == 0) {
        printf("tests succeeded\n");
         
@@ -115,78 +115,29 @@ int test_loadnamx(IAS* ias) {
     return TEST_FAILED;
 }
 
-int test_jumplmx(IAS* ias) {
-    word memory_instruction_word = (word) 0b0000000000000000000000000000010100000000000000000110000000000000;
-    ias -> mar -> register_value = (address) 45;
-    ias -> m -> memory[ias -> mar -> register_value] = memory_instruction_word;
+int test_jump(IAS* ias) {
+    //test jumplmx
+    ias -> pc -> register_value = (address)0;
+    ias -> ibr -> register_value = (half_word) 30;
+    ias -> mar -> register_value = (address) 40;
     jumplmx(ias);
-
-    if(ias -> pc -> register_value == (opcode) 0b00000101) {
-        return TEST_SUCCESSFUL;
-    }
-
-    printf("jumplmx failed\n");
-    return TEST_FAILED;
-}
-
-int test_jumprmx(IAS* ias) {
-    word memory_instruction_word = (word) 0b0000000000000000000000000000010100000000000000000110000000000000;
-    ias -> mar -> register_value = (address) 45;
-    ias -> m -> memory[ias -> mar -> register_value] = memory_instruction_word;
-    jumplmx(ias);
-
-    if(ias -> pc -> register_value == (opcode) 0b00000110) {
-        return TEST_SUCCESSFUL;
-    }
-
-
-    printf("jumprmx failed\n");
-    return TEST_FAILED;
-}
-
-int test_cjumplmx(IAS* ias) {
-    word memory_instruction_word = (word) 0b0000000000000000000000000000010100000000000000000110000000000000;
-    ias -> mar -> register_value = (address) 45;
-    ias -> m -> memory[ias -> mar -> register_value] = memory_instruction_word;
-    ias -> ac -> register_value = (word)1; //random nonnegative value
-    cjumplmx(ias);
-    if(ias -> pc -> register_value != (opcode) 0b00000101) {
-
-    printf("cjumplmx failed\n");
+    if(!((ias -> pc -> register_value == ias -> mar -> register_value) && (ias -> ibr -> register_value == (half_word) 0))) {
+        printf("1: jumplmx failed, expected pc to be 40, ibr to be 0, found pc: %i, ibr: %i\n", ias -> pc -> register_value, ias -> ibr -> register_value);
         return TEST_FAILED;
     }
-    ias -> pc -> register_value = (address) 0;
-    ias -> ac -> register_value = (word) negative(1);
-    cjumplmx(ias);
-    if(ias -> pc -> register_value != (opcode) 0b00000101) {
 
-    printf("cjumplmx failed\n");
+    //test jumprmx
+    ias -> pc -> register_value = (address) 0;
+    ias -> ibr -> register_value = (half_word) 0;
+    ias -> mar -> register_value = (address) 40;
+    ias -> m -> memory[ias -> mar -> register_value] = (word) 0b0000000000000000000000000000000000000000000000000000000000000100;
+    jumprmx(ias);
+    if(!((ias -> pc -> register_value == ias -> mar -> register_value) && (ias -> ibr -> register_value = (half_word) 4))) {
+        printf("2: jumprmx failed, expected pc to be 40, ibr to be 4, found pc: %i, ibr: %i\n", ias -> pc -> register_value, ias -> ibr -> register_value);
         return TEST_FAILED;
     }
 
     return TEST_SUCCESSFUL;
-}
-
-int test_cjumprmx(IAS* ias) {
-     word memory_instruction_word = (word) 0b0000000000000000000000000000010100000000000000000110000000000000;
-    ias -> mar -> register_value = (address) 45;
-    ias -> m -> memory[ias -> mar -> register_value] = memory_instruction_word;
-    ias -> ac -> register_value = (word)1; //random nonnegative value
-    cjumplmx(ias);
-    if(ias -> pc -> register_value != (opcode) 0b00000110) {
-    printf("cjumprmx failed\n");
-        return TEST_FAILED;
-    }
-    ias -> pc -> register_value = (address) 0;
-    ias -> ac -> register_value = (word) negative(1);
-    cjumplmx(ias);
-    if(ias -> pc -> register_value != (opcode) 0b00000110) {
-
-    printf("cjumprmx failed\n");
-        return TEST_FAILED;
-    }
-
-    return TEST_SUCCESSFUL;     
 }
 
 int test_arithmetic(IAS* ias) {

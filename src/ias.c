@@ -266,27 +266,49 @@ int loadnamx(IAS* ias) {
     return SUCCESSFUL;
 }
 
-//take instruction from the left half of memory location X
+/*
+    should set up the registers in such that the next instruction to be exectued
+    is the left instruction in a memory word x
+    in the case of jumplmx, all that needs to be done is to modify the value of the pc register and to clear the IBR
+*/
 int jumplmx(IAS* ias) {
+    //modify the value of the PC register to point to the memory word x
+    ias -> pc -> register_value = ias -> mar -> register_value;
 
-    return 0;
+    //clear IBR
+    ias -> ibr -> register_value = (half_word) 0;
+
+    return SUCCESSFUL;
 }
 
-//take instruction from the right half of memory location X
+/*
+    should set up the registers in such a way that the next instruction to be executed is
+    the right instruction of a memory word x
+    in the case of jumprmx, what needs to be done is for the value of PC and IBR to be modified
+*/
 int jumprmx(IAS* ias) {
+    //modify the value of the PC register to point to the memory word x
+    ias -> pc -> register_value = ias -> mar -> register_value;
+
+    //modify the value of the IBR register to contain the right instruction of in the memory word
+    ias -> ibr -> register_value = (ias -> m -> memory[ias -> mar -> register_value] & RIGHT_HALF_WORD_MASK);
 
     return 0;
 }
 
 //if AC is nonnegative, take instruction from left half of memory location X 
 int cjumplmx(IAS* ias) {
-
+    if(ias -> ac -> register_value > (word) 0) {
+        jumplmx(ias);
+    }
     return 0;
 }
 
 //if AC is nonnegative, take instruction from right half of memory location X
 int cjumprmx(IAS* ias) {
-
+    if(ias -> ac -> register_value > (word) 0) {
+        jumprmx(ias);
+    }
     return 0;
 }
 
