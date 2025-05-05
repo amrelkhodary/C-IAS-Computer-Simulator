@@ -50,9 +50,52 @@ IAS* startIAS() {
     return ias;
 }
 
-//get the next instruction from memory
+/*
+    the purpose of the fetch cycle in IAS is to 
+    1- put the next instruction in IR
+    2- put the address the next instruction will operate on in MAR
+*/
 int fetch(IAS* ias) {
+    /*
+        0-7 8-19 20-27 28-39
+    */
+    //check if an instruction already exists in IBR
+    if((ias -> ibr -> register_value & HALF_WORD_INSTRUCTION_MASK) >> 12 != NOP) {
+        //load the instruction in IR
+        ias -> ir -> register_value = (opcode) ((ias -> ibr -> register_value & HALF_WORD_INSTRUCTION_MASK) >> 12);
 
+        //load the address in MAR
+        ias -> mar -> register_value = (address) (ias -> ibr -> register_value & HALF_WORD_ADDRESS_MASK); 
+        
+        //update the program counter
+        ias -> pc -> register_value = ias -> pc -> register_value + (address) 1;
+    }
+    else {
+        //load the memory word containing the left and right instructions from memory
+        ias -> mbr -> register_value = ias -> m -> memory[ias -> pc -> register_value];
+
+        //decide whether the left instruction is necesssary
+        if((ias -> mbr -> register_value & LEFT_INSTRUCTION_WORD_MASK) >> 32 != NOP) {
+            //store right half word in IBR
+            ias -> ibr -> register_value = (half_word) (ias -> mbr -> register_value & RIGHT_HALF_WORD_MASK);
+
+            //load the instruction in the left half in IR
+            ias -> ir -> register_value = (opcode) ((ias -> mbr -> register_value & LEFT_INSTRUCTION_WORD_MASK) >> 32);
+
+            //load the address in the left half in MAR
+            ias -> mar -> register_value = (address) ((ias -> mbr -> register_value & LEFT_ADDRESS_WORD_MASK) >> 20);
+        }
+        else {
+            //load the instruction in the right half in IR
+            ias -> ir -> register_value = (opcode) ((ias -> mbr -> register_value & RIGHT_INSTRUCTION_WORD_MASK) >> 12);
+
+            //load the address in the right half in MAR
+            ias -> mar -> register_value = (address) ((ias -> mbr -> register_value & RIGHT_ADDRESS_WORD_MASK));
+
+            //update the program counter
+            ias -> pc -> register_value = ias -> pc -> register_value + (address) 1;
+        }
+    }
     return SUCCESSFUL;
 }
 
@@ -243,6 +286,7 @@ int cjumplmx(IAS* ias) {
 
 //if AC is nonnegative, take instruction from right half of memory location X
 int cjumprmx(IAS* ias) {
+
     return 0;
 }
 

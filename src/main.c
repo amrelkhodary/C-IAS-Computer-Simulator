@@ -31,9 +31,12 @@ const opcode LSH        = (opcode) 0b00010100; //left shift AC by one bit (i.e. 
 const opcode RSH        = (opcode) 0b00010101; //right shift AC by one bit (i.e. divide by 2)
 const opcode STOR_lMX   = (opcode) 0b00010010; //replace left address by 12 rightmost bits in AC
 const opcode STOR_rMX   = (opcode) 0b00010011; //reaplce right address by 12 rightmost bits in AC  
+const opcode NOP        = (opcode) 0b00000000; //original ias did NOT include a NOP instruction, this is just used for internal reasons inside the code
 
 const address ADDRESS_MASK                    = (address)  0b0000111111111111; //mask used to extract 12 address bits out of uint16
 const half_word HALF_WORD_MASK                = (half_word)0b00000000000011111111111111111111; //mask used to extract 20 bits out of uint32
+const half_word HALF_WORD_INSTRUCTION_MASK    = (half_word)0b00000000000011111111000000000000; //mask used to extract the instruction out of a half word
+const half_word HALF_WORD_ADDRESS_MASK        = (half_word)0b00000000000000000000111111111111; //mask used to extract the address out of a half word
 const word WORD_MASK                          = (word)     0b0000000000000000000000001111111111111111111111111111111111111111; //mask used to extract 40 bits out of uint64
 const word SIGN_BIT_MASK                      = (word)     0b0000000000000000000000001000000000000000000000000000000000000000; //mask used to extract sign bit out of uint64
 const word NUMBER_VALUE_MASK                  = (word)     0b0000000000000000000000000111111111111111111111111111111111111111; //mask used to extract 39 bits (number value aside from sign bit) out of uint64

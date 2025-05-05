@@ -92,9 +92,12 @@
     extern const opcode RSH; //right shift AC by one bit (i.e. divide by 2)
     extern const opcode STOR_lMX; //replace left address by 12 rightmost bits in AC
     extern const opcode STOR_rMX; //reaplce right address by 12 rightmost bits in AC  
+    extern const opcode NOP;
 
     extern const address ADDRESS_MASK; //mask used to extract 12 address bits out of uint16
     extern const half_word HALF_WORD_MASK; //mask used to extract 20 bits out of uint32
+    extern const half_word HALF_WORD_INSTRUCTION_MASK; //mask used to extract the instruction out of a half word
+    extern const half_word HALF_WORD_ADDRESS_MASK; //mask used to extract the address out of a half word
     extern const word WORD_MASK; //mask used to extract 40 bits out of uint64
     extern const word SIGN_BIT_MASK; //mask used to extract sign bit out of uint64
     extern const word NUMBER_VALUE_MASK; //mask used to extract 39 bits (number value aside from sign bit) out of uint64
@@ -105,7 +108,8 @@
     extern const word LEFT_INSTRUCTION_WORD_MASK; //mask used to extract the left instruction from a 40 bit word
     extern const word RIGHT_INSTRUCTION_WORD_MASK; //mask used to extract the right instruction from a 40 bit word
     extern const word AC_ADDRESS_MASK; //mask used to extract the 12 rightmost bits from AC
-
+    extern const word RIGHT_HALF_WORD_MASK;
+    extern const word LEFT_HALF_WORD_MASK;
     extern const uint64_t MAX_INTEGER; //the max number that could be represented by a 40-bit word that uses a sign bit and two's complement for negative numbers
     extern const bool IGNORE_OVERFLOW;
     extern const bool DONT_IGNORE_OVERFLOW;
