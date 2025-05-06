@@ -1,15 +1,25 @@
+//TODO: Continue implementing parse
 #include "../headers/program_loader.h"
 #include <stdio.h>
 #include <stdlib.h>
 #include "../headers/ias.h"
 #include <errno.h>
+#include <stdbool.h>
+#include <ctype.h>
+#include <string.h>
 
 Data* data_arr = NULL;
 half_word* instruction_arr = NULL;
+
 size_t data_initial_size = 10;
 size_t instruction_initial_size = 50;
+const size_t buffersize = 256;
 const char* MEMORY_ALLOCATION_FAILED_ERROR_MESSAGE = "Memory allocation failed in program_loader.c\n";
-
+const char* FILE_OPENING_FAILED_ERROR_MESSAGE = "Failed to open the program file, please check that the provided path is correct.\n";
+const char* DATA_HEADER = "data:";
+const char* PROGRAM_HEADER = "program:";
+const char COMMENT_CHARACTER = '#';
+//allocate memory for the data array which will store extracted program data form the inputted prgoram text
 int allocateDataArr(Data* data_arr_ptr) {
     data_arr_ptr = (Data*) malloc(data_initial_size * sizeof(Data));
     if(!data_arr_ptr) {
@@ -20,8 +30,9 @@ int allocateDataArr(Data* data_arr_ptr) {
     return SUCCESSFUL;
 }
 
-int allocateInsArr(half_word* instruction_arr_ptr) {
-    instruction_arr_ptr = (half_word*) malloc(instruction_initial_size * sizeof(half_word));
+//allocate memory for the instruction array which will store extracted program instructions from the inputted program text
+int allocateInsArr(Instruction* instruction_arr_ptr) {
+    instruction_arr_ptr = (Instruction*) malloc(instruction_initial_size * sizeof(Instruction));
     if(!instruction_arr_ptr) {
         perror(MEMORY_ALLOCATION_FAILED_ERROR_MESSAGE);
         return errno;
@@ -30,6 +41,7 @@ int allocateInsArr(half_word* instruction_arr_ptr) {
     return SUCCESSFUL;
 }
 
+//increase the size allocated for teh data array
 int increaseDataArrSize(Data* data_arr_ptr) {
     data_arr_ptr = realloc(data_arr_ptr, data_initial_size * 2);
     if(!data_arr_ptr) {
@@ -41,7 +53,8 @@ int increaseDataArrSize(Data* data_arr_ptr) {
     return SUCCESSFUL;
 }
 
-int increaseInsArrSize(half_word* instruction_arr_ptr) {
+//increase the size allocated for the instruction array
+int increaseInsArrSize(Instruction* instruction_arr_ptr) {
     instruction_arr_ptr = realloc(instruction_arr_ptr, instruction_initial_size * 2);
     if(!instruction_arr_ptr) {
         perror(MEMORY_ALLOCATION_FAILED_ERROR_MESSAGE);
@@ -50,4 +63,170 @@ int increaseInsArrSize(half_word* instruction_arr_ptr) {
 
     instruction_initial_size*=2;
     return SUCCESSFUL;
+}
+
+//check if a line is empty
+bool isempty(char* buffer) {
+    for(int i = 0; i<buffersize && buffer[i] != '\n'; i++) {
+        if(isspace(buffer[i]) == 0) {
+            return false;
+        }
+    }
+
+    return true;
+}
+
+//check if a line is a data header
+bool isdataheader(char* buffer, int line_number) {
+    bool found_dataheader = false;
+    for(int i = 0; i<buffersize && buffer[i] != '\n'; i++) {
+        if(isspace(buffer[i]) != 0) {continue;}
+        if(buffer[i] == COMMENT_CHARACTER) {break;}
+        //d -> i, a -> i+1, t -> i+2, a -> i+3, : -> i+4
+        if(i+4 < buffersize) {
+            if(buffer[i] == 'd' && buffer[i+1] == 'a' && buffer[i+2] == 't' && buffer[i+3] == 'a' && buffer[i+4] == ':') { found_dataheader = true;}
+        }
+
+        if(found_dataheader && isspace(buffer[i]) == 0) {
+            fprintf(stderr, "Syntax Error at Line %i: Found text other than \"data:\"\n", line_number);
+            return false;
+        }
+    }
+
+    return found_dataheader;
+}
+
+//check if a line is a program header
+bool isprogramheader(char* buffer, int line_number) {
+    bool found_progheader = false;
+    for(int i = 0; i<buffersize && buffer[i] != '\n'; i++) {
+        if(isspace(buffer[i]) != 0) {continue;}
+        if(buffer[i] == COMMENT_CHARACTER) {break;}
+        //p -> i, r -> i+1, o -> i+2, g -> i+3, r -> i+4, a -> i+5, m -> i+6, : -> i+7
+        if(i+4 < buffersize) {
+            if(buffer[i] == 'p' && buffer[i+1] == 'r' && buffer[i+2] == 'o' && buffer[i+3] == 'g' 
+               && buffer[i+4] == 'r' && buffer[i+5] == 'a' && buffer[i+6] == 'm' && buffer[i+7] == ':') { found_progheader = true;}
+        }
+
+        if(found_progheader && isspace(buffer[i]) == 0) {
+            fprintf(stderr, "Syntax Error at Line %i: Found text other than \"program:\"\n", line_number);
+            return false;
+        }
+    }
+
+    return found_progheader;
+}
+
+//check if a line is a data statement
+bool isdatastatement(char* buffer) {
+    //remove the spaces from the line
+    char nowhitespace_buffer[buffersize];
+    int nowhitespace_buffer_index = 0;
+    for(int i = 0; i<buffersize && buffer[i] != '\n'; i++) {
+        if(isspace(buffer[i]) == 0) {
+            nowhitespace_buffer[nowhitespace_buffer_index++] = buffer[i];        
+        }
+    }
+
+    //now text should be "number,number"
+    for(int i = 0; i<buffersize; i++) {
+        if(!(nowhitespace_buffer[i] == ',' || isdigit(nowhitespace_buffer[i]))) {
+            return false;
+        }
+    }
+
+    return true;
+}
+
+
+//check if a line is a program statement
+bool isprogstatement(char* buffer) {
+    //remove the spaces from the line (except the one between the opcode and the address)
+    char nowhitespace_buffer[buffersize];
+    int nowhitespace_buffer_index = 0;
+    for(int i = 0; i<buffersize && buffer[i] != '\n'; i++) {
+        if(isspace(buffer[i]) == 0) {
+            nowhitespace_buffer[nowhitespace_buffer_index++] = buffer[i];        
+        } else {
+            if(i>=1 && isupper(buffer[i-1]) && isdigit(buffer[i+1])) {
+                nowhitespace_buffer[nowhitespace_buffer_index++] = buffer[i];        
+            }
+        }
+    }
+
+    //now text should be "alpha number"
+    bool beforespace = true;
+    for(int i = 0; i<buffersize; i++) {
+        if(nowhitespace_buffer[i] == ' ') {beforespace = false;}
+        if(!((beforespace && isupper(nowhitespace_buffer[i])) || (nowhitespace_buffer[i] == ' ') || (!beforespace && isdigit(nowhitespace_buffer[i])))) {
+            return false;
+        }
+    }
+
+    return true;
+}
+
+//parse the inputted program text, validate it, and if valid, extract from it program data and instrcutions and store them in the data, program arrays respectively
+int parse(char* program_filepath) {
+    /*
+        PROGRAM FORMAT:-
+
+        data:
+        address(numeric), value(numeric)
+        program:
+        opcode(alphabetic) address(numeric)
+        ----------------------------------------
+        WHAT TO IGNORE:-
+
+        ignore comments started by the symbol #
+        ingore whitespaces except those that differentiate between tokens
+        ----------------------------------------
+        EXAMPLE:-
+        
+        #this program adds 10 and 20
+        data: 
+            900, 10
+            901, 20
+        program:
+            ADDMX 900
+            ADDMX 901
+        ----------------------------------------
+    */
+
+    //open the file
+    FILE* program_fileptr = fopen(program_filepath, "r");
+    if(!program_filepath) {
+        perror(FILE_OPENING_FAILED_ERROR_MESSAGE);
+        return errno;
+    }
+
+    char buffer[buffersize];
+    bool found_data_header = false;
+    bool found_program_header = false;
+    int line_number = 1;
+    while(fgets(buffer, buffersize, program_fileptr) != EOF) {
+        //skip the line if its empty
+        if(isempty(buffer)) {continue;}
+        
+        /*
+            A line is considered valid if it is 
+            1- a data header (before a program header or any other statement is written) 
+            2- a program header (after a data header)
+            3- a data statement (after a data header and before a program header)
+            4- a program statement (after a program and data header)
+        */
+        if(isdataheader(buffer, line_number) && !found_program_header) {
+            found_data_header = true;
+        }
+        else if(isprogramheader(buffer, line_number) && found_data_header) {
+            found_program_header = true;
+        }
+        else if(found_data_header && !found_program_header && isdatastatement(buffer)) {
+            //TODO: extract data and store it in the data array
+        }
+        else if(found_data_header && found_program_header && isprogstatement(buffer)) {
+            //TODO: extract opcode and adreess and store it in the instruction array
+        }
+        line_number++;
+    }
 }
