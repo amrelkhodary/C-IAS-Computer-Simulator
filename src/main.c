@@ -55,6 +55,13 @@ const bool DONT_IGNORE_OVERFLOW = false;
 
 
 int main(int argc, char** argv) {
-    runtests();
+    //take inputs and flags
+
+    //create ias instance
+
+    //load the program
+
+    //run the program
+
     return 0;
 }

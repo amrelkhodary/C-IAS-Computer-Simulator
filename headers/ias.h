@@ -9,7 +9,7 @@
         FATAL_FAILED_TO_START_IAS,
         INTEGER_OVERFLOW,
         UNRECOGNIZED_COMMAND,
-
+        
     } Error;
 
     typedef enum {
