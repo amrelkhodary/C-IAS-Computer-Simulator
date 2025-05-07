@@ -1,0 +1,9 @@
+#this program adds two numbers
+
+data:
+	#address, value
+	900, 10 #set value at address 900 to 10
+	901, 20 
+	ADDMX 900 #add value at address 900 to AC
+	ADDMX 901
+

@@ -63,5 +63,6 @@ int main(int argc, char** argv) {
 
     //run the program
 
+    runtests();
     return 0;
 }

@@ -8,6 +8,7 @@
 #include <math.h>
 #include "../headers/ias.h"
 #include "../headers/tests.h"
+#include "../headers/program_loader.h"
 int runtests() {
     IAS* ias = startIAS();
     setmem(ias, (address)0, (word)10);
@@ -16,7 +17,7 @@ int runtests() {
 
     int testsval = test_isNegative(ias) | test_negative(ias) | test_loadmq(ias) | test_loadmqmx(ias) | test_stormx(ias)
                  | test_loadmx(ias) | test_loadamx(ias) | test_loadnamx(ias) | test_jump(ias) |
-                 test_arithmetic(ias) | test_storlmx(ias) | test_storrmx(ias);
+                 test_arithmetic(ias) | test_storlmx(ias) | test_storrmx(ias) | load_program(ias, "./temp/valid-program");
     if(testsval == 0) {
        printf("tests succeeded\n");
         

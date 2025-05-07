@@ -1,17 +1,19 @@
 //TODO: Continue implementing parse
-#include "../headers/program_loader.h"
 #include <stdio.h>
 #include <stdlib.h>
+#include <stdint.h>
+#include <stdbool.h>
 #include "../headers/ias.h"
 #include <errno.h>
 #include <stdbool.h>
 #include <ctype.h>
 #include <string.h>
 #include <math.h>
+#include "../headers/program_loader.h"
 
 Data* data_arr = NULL;
 int data_arr_index = 0;
-half_word* instruction_arr = NULL;
+Instruction* instruction_arr = NULL;
 int ins_arr_index = 0;
 size_t data_initial_size = 10;
 size_t instruction_initial_size = 50;
@@ -22,9 +24,9 @@ const char* DATA_HEADER = "data:";
 const char* PROGRAM_HEADER = "program:";
 const char COMMENT_CHARACTER = '#';
 //allocate memory for the data array which will store extracted program data form the inputted prgoram text
-int allocateDataArr(Data* data_arr_ptr) {
-    data_arr_ptr = (Data*) malloc(data_initial_size * sizeof(Data));
-    if(!data_arr_ptr) {
+int allocateDataArr() {
+    data_arr = (Data*) malloc(data_initial_size * sizeof(Data));
+    if(!data_arr) {
         perror(MEMORY_ALLOCATION_FAILED_ERROR_MESSAGE);
         return errno; 
     }
@@ -33,9 +35,9 @@ int allocateDataArr(Data* data_arr_ptr) {
 }
 
 //allocate memory for the instruction array which will store extracted program instructions from the inputted program text
-int allocateInsArr(Instruction* instruction_arr_ptr) {
-    instruction_arr_ptr = (Instruction*) malloc(instruction_initial_size * sizeof(Instruction));
-    if(!instruction_arr_ptr) {
+int allocateInsArr() {
+    instruction_arr = (Instruction*) malloc(instruction_initial_size * sizeof(Instruction));
+    if(!instruction_arr) {
         perror(MEMORY_ALLOCATION_FAILED_ERROR_MESSAGE);
         return errno;
     }
@@ -44,9 +46,9 @@ int allocateInsArr(Instruction* instruction_arr_ptr) {
 }
 
 //increase the size allocated for teh data array
-int increaseDataArrSize(Data* data_arr_ptr) {
-    data_arr_ptr = realloc(data_arr_ptr, data_initial_size * 2);
-    if(!data_arr_ptr) {
+int increaseDataArrSize() {
+    data_arr = realloc(data_arr, data_initial_size * 2);
+    if(!data_arr) {
         perror(MEMORY_ALLOCATION_FAILED_ERROR_MESSAGE);
         return errno;
     }
@@ -56,9 +58,9 @@ int increaseDataArrSize(Data* data_arr_ptr) {
 }
 
 //increase the size allocated for the instruction array
-int increaseInsArrSize(Instruction* instruction_arr_ptr) {
-    instruction_arr_ptr = realloc(instruction_arr_ptr, instruction_initial_size * 2);
-    if(!instruction_arr_ptr) {
+int increaseInsArrSize() {
+    instruction_arr = realloc(instruction_arr, instruction_initial_size * 2);
+    if(!instruction_arr) {
         perror(MEMORY_ALLOCATION_FAILED_ERROR_MESSAGE);
         return errno;
     }
@@ -70,6 +72,7 @@ int increaseInsArrSize(Instruction* instruction_arr_ptr) {
 //check if a line is empty
 bool isempty(char* buffer) {
     for(int i = 0; i<buffersize && buffer[i] != '\n'; i++) {
+        if(buffer[i] == COMMENT_CHARACTER) {break;}
         if(isspace(buffer[i]) == 0) {
             return false;
         }
@@ -86,11 +89,12 @@ bool isdataheader(char* buffer, int line_number) {
         if(buffer[i] == COMMENT_CHARACTER) {break;}
         //d -> i, a -> i+1, t -> i+2, a -> i+3, : -> i+4
         if(i+4 < buffersize) {
-            if(buffer[i] == 'd' && buffer[i+1] == 'a' && buffer[i+2] == 't' && buffer[i+3] == 'a' && buffer[i+4] == ':') { found_dataheader = true;}
+            if(buffer[i] == 'd' && buffer[i+1] == 'a' && buffer[i+2] == 't' && buffer[i+3] == 'a' && buffer[i+4] == ':') { found_dataheader = true; i+=5; continue;}
         }
 
-        if(found_dataheader && isspace(buffer[i]) == 0) {
-            fprintf(stderr, "Syntax Error at Line %i: Found text other than \"data:\"\n", line_number);
+        if(found_dataheader && isspace(buffer[i]) == 0 && buffer[i] != '\0') {
+            fprintf(stderr, "Syntax Error at Line %i: Found text other than \"data:\". Character found: \"%c\"\n", line_number, buffer[i]);
+            printf("buffer: %s\n", buffer);
             return false;
         }
     }
@@ -107,10 +111,10 @@ bool isprogramheader(char* buffer, int line_number) {
         //p -> i, r -> i+1, o -> i+2, g -> i+3, r -> i+4, a -> i+5, m -> i+6, : -> i+7
         if(i+4 < buffersize) {
             if(buffer[i] == 'p' && buffer[i+1] == 'r' && buffer[i+2] == 'o' && buffer[i+3] == 'g' 
-               && buffer[i+4] == 'r' && buffer[i+5] == 'a' && buffer[i+6] == 'm' && buffer[i+7] == ':') { found_progheader = true;}
+               && buffer[i+4] == 'r' && buffer[i+5] == 'a' && buffer[i+6] == 'm' && buffer[i+7] == ':') { found_progheader = true; i+=8; continue;}
         }
 
-        if(found_progheader && isspace(buffer[i]) == 0) {
+        if(found_progheader && isspace(buffer[i]) == 0 && buffer[i] != 0) {
             fprintf(stderr, "Syntax Error at Line %i: Found text other than \"program:\"\n", line_number);
             return false;
         }
@@ -123,8 +127,10 @@ bool isprogramheader(char* buffer, int line_number) {
 bool isdatastatement(char* buffer) {
     //remove the spaces from the line
     char nowhitespace_buffer[buffersize];
+    memset(nowhitespace_buffer, 0, buffersize);
     int nowhitespace_buffer_index = 0;
-    for(int i = 0; i<buffersize && buffer[i] != '\n'; i++) {
+    for(int i = 0; i<buffersize && buffer[i]; i++) {
+        if(buffer[i] == COMMENT_CHARACTER) {break;}
         if(isspace(buffer[i]) == 0) {
             nowhitespace_buffer[nowhitespace_buffer_index++] = buffer[i];        
         }
@@ -132,7 +138,10 @@ bool isdatastatement(char* buffer) {
 
     //now text should be "number,number"
     for(int i = 0; i<buffersize; i++) {
-        if(!(nowhitespace_buffer[i] == ',' || isdigit(nowhitespace_buffer[i]))) {
+        printf("%i: %c\n", i, nowhitespace_buffer[i]);
+    }
+    for(int i = 0; i<buffersize; i++) {
+        if(!(nowhitespace_buffer[i] == ',' || isdigit(nowhitespace_buffer[i]) || nowhitespace_buffer[i] == '\0')) {
             return false;
         }
     }
@@ -145,8 +154,10 @@ bool isdatastatement(char* buffer) {
 bool isprogstatement(char* buffer) {
     //remove the spaces from the line (except the one between the opcode and the address)
     char nowhitespace_buffer[buffersize];
+    memset(nowhitespace_buffer, 0, buffersize);
     int nowhitespace_buffer_index = 0;
     for(int i = 0; i<buffersize && buffer[i] != '\n'; i++) {
+        if(buffer[i] == COMMENT_CHARACTER) {break;}
         if(isspace(buffer[i]) == 0) {
             nowhitespace_buffer[nowhitespace_buffer_index++] = buffer[i];        
         } else {
@@ -160,7 +171,7 @@ bool isprogstatement(char* buffer) {
     bool beforespace = true;
     for(int i = 0; i<buffersize; i++) {
         if(nowhitespace_buffer[i] == ' ') {beforespace = false;}
-        if(!((beforespace && isupper(nowhitespace_buffer[i])) || (nowhitespace_buffer[i] == ' ') || (!beforespace && isdigit(nowhitespace_buffer[i])))) {
+        if(!((beforespace && isupper(nowhitespace_buffer[i])) || (nowhitespace_buffer[i] == ' ') || (!beforespace && isdigit(nowhitespace_buffer[i])) || nowhitespace_buffer[i] == '\0')) {
             return false;
         }
     }
@@ -176,7 +187,7 @@ int extractData(char* datastring) {
     //loop through the string to extract values
     bool foundComma = false;
     int position = 0;
-    for(int i = strlen(datastring)-1; i>=0; i++) {
+    for(int i = buffersize-1; i>=0; i--) {
         if(datastring[i] == ',') {foundComma = true; position = 0; continue;}
 
         if(foundComma) {
@@ -193,7 +204,7 @@ int extractData(char* datastring) {
     if(data_arr_index == data_initial_size) {
         increaseDataArrSize(data_arr);
     }
-    data_arr[data_arr_index++];
+    data_arr[data_arr_index++] = ndata;
     return SUCCESSFUL;
 }
 
@@ -205,7 +216,6 @@ int extractInstruction(char* inststring) {
     //loop through the string to extract values
     bool foundSpace = false;
     int position = 0;
-    int lastOpcodeIndex;
     for(int i = strlen(inststring)-1; i>=0; i++) {
         if(inststring[i] == ' ') {foundSpace = true; position = 0; continue;}
 
@@ -213,7 +223,6 @@ int extractInstruction(char* inststring) {
             //add to address
             adr += ((address)inststring[i]) * ((address)pow(10, position++));
         } else {
-            lastOpcodeIndex = i;
             inststring[i+1] = '\0'; //adding null terminator after the last opcode character so that I can use strcmp to compare the opcode against valid ones
             break;
         }
@@ -283,7 +292,7 @@ int extractInstruction(char* inststring) {
     if(ins_arr_index == instruction_initial_size) {
         increaseInsArrSize(instruction_arr);
     }
-    instruction_arr[ins_arr_index++];
+    instruction_arr[ins_arr_index++] = ninst;
     return SUCCESSFUL;
 }
 
@@ -316,7 +325,7 @@ int parse(char* program_filepath) {
 
     //open the file
     FILE* program_fileptr = fopen(program_filepath, "r");
-    if(!program_filepath) {
+    if(!program_fileptr) {
         perror(FILE_OPENING_FAILED_ERROR_MESSAGE);
         return errno;
     }
@@ -326,12 +335,21 @@ int parse(char* program_filepath) {
     allocateInsArr(instruction_arr);
 
     char buffer[buffersize];
+    //initialize values inside buffer to 0
+    for(int i = 0; i<buffersize; i++) {
+        buffer[i] = '\0';
+    }
     bool found_data_header = false;
     bool found_program_header = false;
     int line_number = 1;
-    while(fgets(buffer, buffersize, program_fileptr) != EOF) {
+    while(fgets(buffer, buffersize, program_fileptr)) {
+        //DEBUG: print buffer
+        for(int i = 0; i<buffersize; i++) {
+            if(buffer[i] == '\0') {continue;}
+            printf("%i: %c\n", i, buffer[i]);
+        }
         //skip the line if its empty
-        if(isempty(buffer)) {continue;}
+        if(isempty(buffer)) {line_number++; memset(buffer, 0, buffersize); continue;}
         
         /*
             A line is considered valid if it is 
@@ -355,9 +373,13 @@ int parse(char* program_filepath) {
             extractInstruction(buffer);
         }
         else {
-            fprintf(stderr, "Syntax error in your program file.\n");
+            fprintf(stderr, "Syntax error in your program file at line %i.\n", line_number);
+            if(found_data_header) {printf("found data header, "); }if(found_program_header) {printf("found program header.\n");}
+            memset(buffer, 0, buffersize);
             return SYNTAX_ERROR;
         }
+
+        memset(buffer, 0, buffersize);
         line_number++;
     }
 
