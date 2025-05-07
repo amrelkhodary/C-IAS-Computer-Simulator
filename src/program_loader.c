@@ -287,10 +287,18 @@ int parse(char* program_filepath) {
         }
         else if(found_data_header && !found_program_header && isdatastatement(buffer)) {
             //TODO: extract data and store it in the data array
+            extractData(buffer);
         }
         else if(found_data_header && found_program_header && isprogstatement(buffer)) {
             //TODO: extract opcode and adreess and store it in the instruction array
+            extractInstruction(buffer);
+        }
+        else {
+            fprintf(stderr, "Syntax error in your program file.\n");
+            return SYNTAX_ERROR;
         }
         line_number++;
     }
+
+    return SUCCESSFUL;
 }
