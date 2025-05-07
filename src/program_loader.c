@@ -205,6 +205,7 @@ int extractInstruction(char* inststring) {
     //loop through the string to extract values
     bool foundSpace = false;
     int position = 0;
+    int lastOpcodeIndex;
     for(int i = strlen(inststring)-1; i>=0; i++) {
         if(inststring[i] == ' ') {foundSpace = true; position = 0; continue;}
 
@@ -212,12 +213,72 @@ int extractInstruction(char* inststring) {
             //add to address
             adr += ((address)inststring[i]) * ((address)pow(10, position++));
         } else {
-            //add to opcode
-            op += ((word)inststring[i]) * ((word)pow(10, position++));
+            lastOpcodeIndex = i;
+            inststring[i+1] = '\0'; //adding null terminator after the last opcode character so that I can use strcmp to compare the opcode against valid ones
+            break;
         }
     }
-    //create a new data struct and add it to the data array
+    //check if the opcode is a valid one
     Instruction ninst; 
+    if(strcmp(inststring, "LOADMQ") == 0) {
+       ninst.op = LOAD_MQ; 
+    }
+    else if(strcmp(inststring, "LOADMQMX") == 0) {
+        ninst.op = LOAD_MQ_MX;
+    }
+    else if(strcmp(inststring, "STOR_MX") == 0) {
+        ninst.op = STOR_MX;
+    }
+    else if(strcmp(inststring, "LOAD_MX") == 0) {
+        ninst.op = LOAD_MX;
+    }
+    else if(strcmp(inststring, "LOAD_nMX") == 0) {
+        ninst.op = LOAD_nMX;
+    }
+    else if(strcmp(inststring, "LOAD_aMX") == 0) {
+        ninst.op = LOAD_aMX;
+    }
+    else if(strcmp(inststring, "LOAD_naMX") == 0) {
+        ninst.op = LOAD_naMX;
+    }
+    else if(strcmp(inststring, "JUMP") == 0) {
+        ninst.op = JUMP_lMX;
+    }
+    else if(strcmp(inststring, "CJUMP") == 0) {
+        ninst.op = CJUMP_lMX;
+    }
+    else if(strcmp(inststring, "ADDMX") == 0) {
+        ninst.op = ADD_MX;
+    }
+    else if(strcmp(inststring, "ADDAMX") == 0) {
+        ninst.op = ADD_aMX;
+    }
+    else if(strcmp(inststring, "SUBMX") == 0) {
+        ninst.op = SUB_MX;
+    }
+    else if(strcmp(inststring, "SUBAMX") == 0) {
+        ninst.op = SUB_aMX;
+    }
+    else if(strcmp(inststring, "MULMX") == 0) {
+        ninst.op = MUL_MX;
+    }
+    else if(strcmp(inststring, "DIVMX") == 0) {
+        ninst.op = DIV_MX;
+    }
+    else if(strcmp(inststring, "LSH") == 0) {
+        ninst.op = LSH;
+    }
+    else if(strcmp(inststring, "RSH") == 0) {
+        ninst.op = RSH;
+    }
+    else if(strcmp(inststring, "STORAMX") == 0) {
+        ninst.op = STOR_lMX;
+    } else {
+        fprintf(stderr, "ERROR: Invalid command %s found in program file.\n", inststring);
+        return UNRECOGNIZED_COMMAND;
+    }
+
+    //create a new data struct and add it to the data array
     ninst.op = op; ninst.adr = adr;
     if(ins_arr_index == instruction_initial_size) {
         increaseInsArrSize(instruction_arr);
@@ -300,6 +361,7 @@ int parse(char* program_filepath) {
         line_number++;
     }
 
+    fclose(program_fileptr);
     return SUCCESSFUL;
 }
 
@@ -356,5 +418,7 @@ int load_program(IAS* ias, char* program_filepath) {
         return returnval;
     }
 
+    free(data_arr);
+    free(instruction_arr);
     return SUCCESSFUL;
 }
