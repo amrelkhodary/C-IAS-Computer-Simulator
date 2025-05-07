@@ -7,10 +7,12 @@
 #include <stdbool.h>
 #include <ctype.h>
 #include <string.h>
+#include <math.h>
 
 Data* data_arr = NULL;
+int data_arr_index = 0;
 half_word* instruction_arr = NULL;
-
+int ins_arr_index = 0;
 size_t data_initial_size = 10;
 size_t instruction_initial_size = 50;
 const size_t buffersize = 256;
@@ -166,6 +168,64 @@ bool isprogstatement(char* buffer) {
     return true;
 }
 
+//extract address and value from a valid data statement
+int extractData(char* datastring) {
+    address adr = (address) 0; //initial value
+    word val = (word) 0; //initial value
+
+    //loop through the string to extract values
+    bool foundComma = false;
+    int position = 0;
+    for(int i = strlen(datastring)-1; i>=0; i++) {
+        if(datastring[i] == ',') {foundComma = true; position = 0; continue;}
+
+        if(foundComma) {
+            //add to address
+            adr += ((address)datastring[i]) * ((address)pow(10, position++));
+        } else {
+            //add to value
+            val += ((word)datastring[i]) * ((word)pow(10, position++));
+        }
+    }
+    //create a new data struct and add it to the data array
+    Data ndata; 
+    ndata.adr = adr; ndata.val = val;
+    if(data_arr_index == data_initial_size) {
+        increaseDataArrSize(data_arr);
+    }
+    data_arr[data_arr_index++];
+    return SUCCESSFUL;
+}
+
+//extract opcode and address from a validinstruction statement
+int extractInstruction(char* inststring) {
+    opcode op = (opcode) 0; //initial value
+    address adr = (address) 0; //initial value
+
+    //loop through the string to extract values
+    bool foundSpace = false;
+    int position = 0;
+    for(int i = strlen(inststring)-1; i>=0; i++) {
+        if(inststring[i] == ' ') {foundSpace = true; position = 0; continue;}
+
+        if(foundSpace) {
+            //add to address
+            adr += ((address)inststring[i]) * ((address)pow(10, position++));
+        } else {
+            //add to opcode
+            op += ((word)inststring[i]) * ((word)pow(10, position++));
+        }
+    }
+    //create a new data struct and add it to the data array
+    Instruction ninst; 
+    ninst.op = op; ninst.adr = adr;
+    if(ins_arr_index == instruction_initial_size) {
+        increaseInsArrSize(instruction_arr);
+    }
+    instruction_arr[ins_arr_index++];
+    return SUCCESSFUL;
+}
+
 //parse the inputted program text, validate it, and if valid, extract from it program data and instrcutions and store them in the data, program arrays respectively
 int parse(char* program_filepath) {
     /*
@@ -199,6 +259,10 @@ int parse(char* program_filepath) {
         perror(FILE_OPENING_FAILED_ERROR_MESSAGE);
         return errno;
     }
+
+    //create the data and instruction arrays
+    allocateDataArr(data_arr);
+    allocateInsArr(instruction_arr);
 
     char buffer[buffersize];
     bool found_data_header = false;

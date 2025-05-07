@@ -10,6 +10,8 @@ typedef struct Instruction {
 
 extern Data* data_arr; 
 extern Instruction* instruction_arr;
+extern int data_arr_index;
+extern int ins_arr_index;
 extern const size_t data_intial_size;
 extern const size_t instruction_intial_size;
 extern const size_t buffersize;
@@ -23,6 +25,8 @@ bool isdataheader(char* buffer, int line_number);
 bool isprogramheader(char* buffer, int line_number); 
 bool isdatastatement(char* buffer); 
 bool isprogstatement(char* buffer); 
+int extractData(char* datastring);
+int extractInstruction(char* inststring);
 int parse(char* program_filepath);
 int allocateDataArr(Data* data_arr_ptr);
 int allocateInsArr(half_word* instruction_arr_ptr);
