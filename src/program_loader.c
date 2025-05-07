@@ -302,3 +302,59 @@ int parse(char* program_filepath) {
 
     return SUCCESSFUL;
 }
+
+//load data from the data array into IAS memory
+int loadData(IAS* ias, Data* data_arr) {
+    for(int i = 0; i<=data_arr_index; i++)  {
+        setmem(ias, data_arr[i].adr, data_arr[i].val);
+    }   
+
+    return SUCCESSFUL;
+}
+
+//load instructions form the instructions array into the IAS memory
+int loadInstructions(IAS* ias, Instruction* instruction_arr) {
+    /*
+        this function loads instructions only in the right side of a memory word, the left side will include a NOP instruction
+        , this design, though it doesn't make full use of IAS's resources, makes it simpler to write programs.
+    */
+
+    word temp_instword = (word) 0;
+    word temp_opcode = (word) 0;
+    word temp_address = (word) 0;
+    address ins_address_counter = (address) 0;
+    for(int i = 0; i<=ins_arr_index; i++) {
+        temp_opcode = (word) instruction_arr[i].op;
+        temp_address = (word) instruction_arr[i].adr;
+        temp_opcode = temp_opcode << 12;
+
+        temp_instword = temp_instword | temp_opcode;
+        temp_instword = temp_instword | temp_address;
+        setmem(ias, ins_address_counter++, temp_instword);
+    }
+    return SUCCESSFUL;
+}
+
+int load_program(IAS* ias, char* program_filepath) {
+    //parse the program file
+    int returnval = parse(program_filepath);
+    if(returnval != SUCCESSFUL) {
+        fprintf(stderr, "ERROR: Failed to parse you program file.\n");
+        return returnval;
+    }
+
+    //load data and instructions 
+    returnval = loadData(ias, data_arr);
+    if(returnval != SUCCESSFUL) {
+        fprintf(stderr, "ERROR: Failed to load data into IAS.\n");
+        return returnval;
+    }
+
+    returnval = loadInstructions(ias, instruction_arr);
+    if(returnval != SUCCESSFUL) {
+        fprintf(stderr, "ERROR: Failed to load instructions into IAS.\n");
+        return returnval;
+    }
+
+    return SUCCESSFUL;
+}
