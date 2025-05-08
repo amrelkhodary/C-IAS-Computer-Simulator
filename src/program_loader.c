@@ -47,7 +47,7 @@ int allocateInsArr() {
 
 //increase the size allocated for teh data array
 int increaseDataArrSize() {
-    data_arr = realloc(data_arr, data_initial_size * 2);
+    data_arr = realloc(data_arr, data_initial_size * 2 * sizeof(Data));
     if(!data_arr) {
         perror(MEMORY_ALLOCATION_FAILED_ERROR_MESSAGE);
         return errno;
@@ -59,7 +59,7 @@ int increaseDataArrSize() {
 
 //increase the size allocated for the instruction array
 int increaseInsArrSize() {
-    instruction_arr = realloc(instruction_arr, instruction_initial_size * 2);
+    instruction_arr = realloc(instruction_arr, instruction_initial_size * 2 * sizeof(Instruction));
     if(!instruction_arr) {
         perror(MEMORY_ALLOCATION_FAILED_ERROR_MESSAGE);
         return errno;
@@ -108,7 +108,7 @@ bool isprogramheader(char* buffer, int line_number) {
         if(isspace(buffer[i]) != 0) {continue;}
         if(buffer[i] == COMMENT_CHARACTER) {break;}
         //p -> i, r -> i+1, o -> i+2, g -> i+3, r -> i+4, a -> i+5, m -> i+6, : -> i+7
-        if(i+4 < buffersize) {
+        if(i+7 < buffersize) {
             if(buffer[i] == 'p' && buffer[i+1] == 'r' && buffer[i+2] == 'o' && buffer[i+3] == 'g' 
                && buffer[i+4] == 'r' && buffer[i+5] == 'a' && buffer[i+6] == 'm' && buffer[i+7] == ':') { found_progheader = true; i+=8; continue;}
         }
@@ -443,7 +443,7 @@ int parse(char* program_filepath) {
 
 //load data from the data array into IAS memory
 int loadData(IAS* ias, Data* data_arr) {
-    for(int i = 0; i<=data_arr_index; i++)  {
+    for(int i = 0; i<data_arr_index; i++)  {
         setmem(ias, data_arr[i].adr, data_arr[i].val);
     }   
 
@@ -465,7 +465,7 @@ int loadInstructions(IAS* ias, Instruction* instruction_arr) {
     word temp_address = (word) 0;
     address ins_address_counter = (address) 0;
 
-    for(int i = 0; i<=ins_arr_index; i++) {
+    for(int i = 0; i<ins_arr_index; i++) {
         temp_opcode = (word) instruction_arr[i].op;
         temp_address = (word) instruction_arr[i].adr;
         temp_opcode = temp_opcode << 12;
@@ -473,6 +473,7 @@ int loadInstructions(IAS* ias, Instruction* instruction_arr) {
         temp_instword = temp_instword | temp_opcode;
         temp_instword = temp_instword | temp_address;
         setmem(ias, ins_address_counter++, temp_instword);
+        temp_instword = (word) 0;
     }
     return SUCCESSFUL;
 }
@@ -501,4 +502,18 @@ int load_program(IAS* ias, char* program_filepath) {
     free(data_arr);
     free(instruction_arr);
     return SUCCESSFUL;
+}
+
+void debug_printData() {
+    printf("data: \n");
+    for(int i = 0; i<data_arr_index; i++) {
+        printf("address: %i, value: %li\n", data_arr[i].adr, data_arr[i].val);
+    }   
+}
+
+void debug_printInstructions() {
+    printf("instructions: \n");
+    for(int i = 0; i<ins_arr_index; i++) {
+        printf("opcode: %i, address: %i\n", instruction_arr[i].op, instruction_arr[i].adr);
+    }
 }
