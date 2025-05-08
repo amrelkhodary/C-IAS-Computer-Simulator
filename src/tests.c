@@ -17,7 +17,9 @@ int runtests() {
 
     int testsval = test_isNegative(ias) | test_negative(ias) | test_loadmq(ias) | test_loadmqmx(ias) | test_stormx(ias)
                  | test_loadmx(ias) | test_loadamx(ias) | test_loadnamx(ias) | test_jump(ias) |
-                 test_arithmetic(ias) | test_storlmx(ias) | test_storrmx(ias) | load_program(ias, "./temp/valid-program");
+                 test_arithmetic(ias) | test_storlmx(ias) | test_storrmx(ias) | load_program(ias, "./temp/valid-program")
+                 | !(load_program(ias, "./temp/invalid-program-1")) | !(load_program(ias, "./temp/invalid-program-2")) | !(load_program(ias, "./temp/invalid-program-3"))
+                 | !(load_program(ias, "./temp/invalid-program-4")) | !(load_program(ias, "./temp/invalid-program-5"));
     if(testsval == 0) {
        printf("tests succeeded\n");
         

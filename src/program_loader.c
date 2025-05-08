@@ -94,7 +94,6 @@ bool isdataheader(char* buffer, int line_number) {
 
         if(found_dataheader && isspace(buffer[i]) == 0 && buffer[i] != '\0') {
             fprintf(stderr, "Syntax Error at Line %i: Found text other than \"data:\". Character found: \"%c\"\n", line_number, buffer[i]);
-            printf("buffer: %s\n", buffer);
             return false;
         }
     }
@@ -137,9 +136,6 @@ bool isdatastatement(char* buffer) {
     }
 
     //now text should be "number,number"
-    for(int i = 0; i<buffersize; i++) {
-        printf("%i: %c\n", i, nowhitespace_buffer[i]);
-    }
     for(int i = 0; i<buffersize; i++) {
         if(!(nowhitespace_buffer[i] == ',' || isdigit(nowhitespace_buffer[i]) || nowhitespace_buffer[i] == '\0')) {
             return false;
@@ -184,22 +180,28 @@ int extractData(char* datastring) {
     address adr = (address) 0; //initial value
     word val = (word) 0; //initial value
 
-    //loop through the string to extract values
-    bool foundComma = false;
-    int position = 0;
-    for(int i = buffersize-1; i>=0; i--) {
-        if(datastring[i] == ',') {foundComma = true; position = 0; continue;}
+    //extract address and value substrings
+    char* substr_address = NULL;
+    char* substr_value = NULL;
+    for(int i = 0; i<buffersize; i++) {
+        if(datastring[i] == COMMENT_CHARACTER) {datastring[i] = '\0'; break;}
+        if(datastring[i] == ',') {
+            datastring[i] = '\0';
 
-        if(foundComma) {
-            //add to address
-            adr += ((address)datastring[i]) * ((address)pow(10, position++));
-        } else {
-            //add to value
-            val += ((word)datastring[i]) * ((word)pow(10, position++));
+            substr_address = datastring;
+            substr_value = datastring+i+1;
+            break;
         }
     }
-    //create a new data struct and add it to the data array
+
     Data ndata; 
+    //extract address from the address substring
+    ndata.adr = extractNumber(ignoreSpaces(substr_address));
+
+    //extract data from the data substring
+    ndata.val = extractNumber_word(ignoreSpaces(substr_value));
+
+    //create a new data struct and add it to the data array
     ndata.adr = adr; ndata.val = val;
     if(data_arr_index == data_initial_size) {
         increaseDataArrSize(data_arr);
@@ -208,91 +210,153 @@ int extractData(char* datastring) {
     return SUCCESSFUL;
 }
 
-//extract opcode and address from a validinstruction statement
-int extractInstruction(char* inststring) {
-    opcode op = (opcode) 0; //initial value
-    address adr = (address) 0; //initial value
-
-    //loop through the string to extract values
-    bool foundSpace = false;
-    int position = 0;
-    for(int i = strlen(inststring)-1; i>=0; i++) {
-        if(inststring[i] == ' ') {foundSpace = true; position = 0; continue;}
-
-        if(foundSpace) {
-            //add to address
-            adr += ((address)inststring[i]) * ((address)pow(10, position++));
-        } else {
-            inststring[i+1] = '\0'; //adding null terminator after the last opcode character so that I can use strcmp to compare the opcode against valid ones
-            break;
+//function to delete leading or following spaces from a string 
+char* ignoreSpaces(char* str) {
+    bool is_following = false;
+    for(int i = 0; str[i] != '\0'; i++) {
+        if(isspace(str[i])) {
+            if(is_following) {
+                str[i] = '\0';
+                break;
+            } else {
+                str++;
+            }
+        }
+        else {
+            is_following = true;
         }
     }
-    //check if the opcode is a valid one
-    Instruction ninst; 
-    if(strcmp(inststring, "LOADMQ") == 0) {
-       ninst.op = LOAD_MQ; 
+    
+    return str;
+}
+
+address extractNumber(char* str) {
+    address number = (address) 0;
+    address position = 0;
+
+    for(int i = strlen(str) - 1; i>=0; i--) {
+        if(isdigit(str[i])) {
+            number += ((address) (str[i] - '0')) * pow(10, position++);
+        }
     }
-    else if(strcmp(inststring, "LOADMQMX") == 0) {
+
+    return number;
+}
+
+word extractNumber_word(char* str) {
+    //determine the sign
+    bool isNegative = (str[0] == '-') ? true : false;
+
+    //extract the value of the number
+    word number = (word) 0;
+    word position = (word) 0;
+    for(int i = strlen(str) - 1; i>=0; i--) {
+        if(isdigit(str[i])) {
+            number += ((word) (str[i] - '0')) * pow(10, position++);
+        }
+    }
+
+    //if negative, convert the number to two's complement, otherwise, return it as is
+    if(isNegative) {
+        return negative(number);
+    }
+    
+    return number;
+}
+
+//extract opcode and address from a valid instruction statement
+int extractInstruction(char* inststring) {
+    /*
+        format of a valid instruction statement
+        [whitespace]<OPCODE(uppercase)>[whitespace] <address(number)>[whitespace or comment]
+    */
+    Instruction ninst;
+    char* address_substr = NULL;
+    for(int i = 0; i<buffersize; i++) {
+        //skip if there is a comment
+        if(inststring[i] == COMMENT_CHARACTER) {inststring[i] = '\0'; break;}
+
+        //skip all whitespace except the one space that is between the opcode and the address
+        if(isspace(inststring[i]) && !(i>=1 && isupper(inststring[i-1]) && isdigit(inststring[i+1]))) {continue;}
+
+        //detect the space between the opcode and the address
+        if(isspace(inststring[i])) {
+            //initilize the address substr
+            address_substr = inststring + i + 1;
+            //turn the space into a null terminator character so that strcmp can be used to match against known opcodes
+            inststring[i] = '\0';
+            continue;
+        }
+    }
+
+    //extract opcode
+    if(strcmp(ignoreSpaces(inststring), "LOADMQ") == 0) {
+        ninst.op = LOAD_MQ; 
+    }
+    else if(strcmp(ignoreSpaces(inststring), "LOADMQMX") == 0) {
         ninst.op = LOAD_MQ_MX;
     }
-    else if(strcmp(inststring, "STOR_MX") == 0) {
+    else if(strcmp(ignoreSpaces(inststring), "STOR_MX") == 0) {
         ninst.op = STOR_MX;
     }
-    else if(strcmp(inststring, "LOAD_MX") == 0) {
+    else if(strcmp(ignoreSpaces(inststring), "LOAD_MX") == 0) {
         ninst.op = LOAD_MX;
     }
-    else if(strcmp(inststring, "LOAD_nMX") == 0) {
+    else if(strcmp(ignoreSpaces(inststring), "LOAD_nMX") == 0) {
         ninst.op = LOAD_nMX;
     }
-    else if(strcmp(inststring, "LOAD_aMX") == 0) {
+    else if(strcmp(ignoreSpaces(inststring), "LOAD_aMX") == 0) {
         ninst.op = LOAD_aMX;
     }
-    else if(strcmp(inststring, "LOAD_naMX") == 0) {
+    else if(strcmp(ignoreSpaces(inststring), "LOAD_naMX") == 0) {
         ninst.op = LOAD_naMX;
     }
-    else if(strcmp(inststring, "JUMP") == 0) {
+    else if(strcmp(ignoreSpaces(inststring), "JUMP") == 0) {
         ninst.op = JUMP_lMX;
     }
-    else if(strcmp(inststring, "CJUMP") == 0) {
+    else if(strcmp(ignoreSpaces(inststring), "CJUMP") == 0) {
         ninst.op = CJUMP_lMX;
     }
-    else if(strcmp(inststring, "ADDMX") == 0) {
+    else if(strcmp(ignoreSpaces(inststring), "ADDMX") == 0) {
         ninst.op = ADD_MX;
     }
-    else if(strcmp(inststring, "ADDAMX") == 0) {
+    else if(strcmp(ignoreSpaces(inststring), "ADDAMX") == 0) {
         ninst.op = ADD_aMX;
     }
-    else if(strcmp(inststring, "SUBMX") == 0) {
+    else if(strcmp(ignoreSpaces(inststring), "SUBMX") == 0) {
         ninst.op = SUB_MX;
     }
-    else if(strcmp(inststring, "SUBAMX") == 0) {
+    else if(strcmp(ignoreSpaces(inststring), "SUBAMX") == 0) {
         ninst.op = SUB_aMX;
     }
-    else if(strcmp(inststring, "MULMX") == 0) {
+    else if(strcmp(ignoreSpaces(inststring), "MULMX") == 0) {
         ninst.op = MUL_MX;
     }
-    else if(strcmp(inststring, "DIVMX") == 0) {
+    else if(strcmp(ignoreSpaces(inststring), "DIVMX") == 0) {
         ninst.op = DIV_MX;
     }
-    else if(strcmp(inststring, "LSH") == 0) {
+    else if(strcmp(ignoreSpaces(inststring), "LSH") == 0) {
         ninst.op = LSH;
     }
-    else if(strcmp(inststring, "RSH") == 0) {
+    else if(strcmp(ignoreSpaces(inststring), "RSH") == 0) {
         ninst.op = RSH;
     }
-    else if(strcmp(inststring, "STORAMX") == 0) {
+    else if(strcmp(ignoreSpaces(inststring), "STORAMX") == 0) {
         ninst.op = STOR_lMX;
     } else {
-        fprintf(stderr, "ERROR: Invalid command %s found in program file.\n", inststring);
+        fprintf(stderr, "ERROR: Invalid command %s found in program file.\n", ignoreSpaces(inststring) );
         return UNRECOGNIZED_COMMAND;
     }
 
-    //create a new data struct and add it to the data array
-    ninst.op = op; ninst.adr = adr;
+    //extract address
+    if(address_substr) {ninst.adr = extractNumber(ignoreSpaces(address_substr));} 
+    else {fprintf(stderr, "Could not extract address from instruction.\n"); return SYNTAX_ERROR;}
+    //add instruction to instruction array
     if(ins_arr_index == instruction_initial_size) {
         increaseInsArrSize(instruction_arr);
     }
     instruction_arr[ins_arr_index++] = ninst;
+
     return SUCCESSFUL;
 }
 
@@ -343,11 +407,6 @@ int parse(char* program_filepath) {
     bool found_program_header = false;
     int line_number = 1;
     while(fgets(buffer, buffersize, program_fileptr)) {
-        //DEBUG: print buffer
-        for(int i = 0; i<buffersize; i++) {
-            if(buffer[i] == '\0') {continue;}
-            printf("%i: %c\n", i, buffer[i]);
-        }
         //skip the line if its empty
         if(isempty(buffer)) {line_number++; memset(buffer, 0, buffersize); continue;}
         
@@ -374,7 +433,6 @@ int parse(char* program_filepath) {
         }
         else {
             fprintf(stderr, "Syntax error in your program file at line %i.\n", line_number);
-            if(found_data_header) {printf("found data header, "); }if(found_program_header) {printf("found program header.\n");}
             memset(buffer, 0, buffersize);
             return SYNTAX_ERROR;
         }
@@ -401,12 +459,16 @@ int loadInstructions(IAS* ias, Instruction* instruction_arr) {
     /*
         this function loads instructions only in the right side of a memory word, the left side will include a NOP instruction
         , this design, though it doesn't make full use of IAS's resources, makes it simpler to write programs.
+
+        0-7 8-19 20-27 28-39
+                       (28 - 31)(32 - 39)
     */
 
     word temp_instword = (word) 0;
     word temp_opcode = (word) 0;
     word temp_address = (word) 0;
     address ins_address_counter = (address) 0;
+
     for(int i = 0; i<=ins_arr_index; i++) {
         temp_opcode = (word) instruction_arr[i].op;
         temp_address = (word) instruction_arr[i].adr;
