@@ -177,9 +177,6 @@ bool isprogstatement(char* buffer) {
 
 //extract address and value from a valid data statement
 int extractData(char* datastring) {
-    address adr = (address) 0; //initial value
-    word val = (word) 0; //initial value
-
     //extract address and value substrings
     char* substr_address = NULL;
     char* substr_value = NULL;
@@ -202,7 +199,6 @@ int extractData(char* datastring) {
     ndata.val = extractNumber_word(ignoreSpaces(substr_value));
 
     //create a new data struct and add it to the data array
-    ndata.adr = adr; ndata.val = val;
     if(data_arr_index == data_initial_size) {
         increaseDataArrSize(data_arr);
     }
