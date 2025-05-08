@@ -1,4 +1,3 @@
-//TODO: Continue implementing parse
 #include <stdio.h>
 #include <stdlib.h>
 #include <stdint.h>

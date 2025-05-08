@@ -8,7 +8,7 @@
 #include <math.h>
 #include "../headers/ias.h"
 #include "../headers/tests.h"
-
+#include "../headers/program_loader.h"
 //defining program constants
 const opcode LOAD_MQ    = (opcode) 0b00001010; //transfer contents of MQ to AC 
 const opcode LOAD_MQ_MX = (opcode) 0b00001001; //transfer contents of memory location X to MQ
@@ -52,7 +52,7 @@ const word LEFT_HALF_WORD_MASK                = (word)     0b0000000000000000000
 const uint64_t MAX_INTEGER = (uint64_t) 549755813887; //the max number that could be represented by a 40-bit word that uses a sign bit and two's complement for negative numbers
 const bool IGNORE_OVERFLOW = true;
 const bool DONT_IGNORE_OVERFLOW = false;
-
+const int IAS_MEMORY_WORD_COUNT = 1024;
 
 int main(int argc, char** argv) {
     //take inputs and flags
@@ -60,7 +60,7 @@ int main(int argc, char** argv) {
     //create ias instance
 
     //load the program
-
+     
     //run the program
 
     runtests();

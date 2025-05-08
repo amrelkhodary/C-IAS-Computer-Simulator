@@ -10,6 +10,7 @@
         INTEGER_OVERFLOW,
         UNRECOGNIZED_COMMAND,
         SYNTAX_ERROR,
+        FILE_DOES_NOT_EXIST
          
     } Error;
 
@@ -114,6 +115,7 @@
     extern const uint64_t MAX_INTEGER; //the max number that could be represented by a 40-bit word that uses a sign bit and two's complement for negative numbers
     extern const bool IGNORE_OVERFLOW;
     extern const bool DONT_IGNORE_OVERFLOW;
+    extern const int IAS_MEMORY_WORD_COUNT; //number of memory words in the IAS computer
 
     //function headers
     IAS* startIAS();

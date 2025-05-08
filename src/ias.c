@@ -19,7 +19,7 @@ IAS* startIAS() {
     AC* ac = (AC*) malloc(sizeof(AC));
     MQ* mq = (MQ*) malloc(sizeof(MQ));
     Memory* m = (Memory*) malloc(sizeof(Memory));
-    m -> memory = (uint64_t*) calloc(4096, sizeof(uint64_t));
+    m -> memory = (uint64_t*) calloc(IAS_MEMORY_WORD_COUNT, sizeof(uint64_t));
     if(!(ias && pc && ir && mar && mbr && ibr && ac && mq && m && m->memory)) {
         fprintf(stderr, "FATAL: Failed to start the IAS computer.\n");
         return NULL;
