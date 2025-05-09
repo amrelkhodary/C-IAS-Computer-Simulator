@@ -33,8 +33,8 @@ bool exists_logsdir(); //function that checks whether the logs directory exists
 int create_logsdir(); //function that creates a new logs directory
 
 int create_logdir(); //function that creates a new directory in which the register and memory dump logfiles will be created
-char* generate_logdirname(); //function that generates a name for a logdir based on the current time
-int createlog_register(); //function that creates a new register logfile
-int createlog_memorydmp(); //function that creates a new memorydmp logfile
-int updatelog_register(); //function that updates an existing register logfile
-int updatelog_memorydmp(); //function that updates an existing memorydmp logfile
+int generate_logdirname(char* nameref); //function that generates a name for a logdir based on the current time
+int createlog_register(char* logdirname); //function that creates a new register logfile
+int createlog_memorydmp(char* logdirname, Data* ndata, size_t length); //function that creates a new memorydmp logfile
+int updatelog_register(IAS* ias); //function that updates an existing register logfile
+int updatelog_memorydmp(Data* ndata, size_t legnth); //function that updates an existing memorydmp logfile

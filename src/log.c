@@ -5,7 +5,9 @@
 #include <stdbool.h>
 #include <errno.h>
 #include <time.h>
+#include <linux/limits.h>
 #include "../headers/ias.h"
+#include "../headers/program_loader.h"
 #include "../headers/log.h"
 
 //global variables
@@ -52,7 +54,10 @@ int create_logsdir() {
 
 //creates a log directory for a specific execution
 int create_logdir() {
-   LOG_DIR = fopen(generate_logdirname(), "w");
+   char logdir_name[NAME_MAX];
+   generate_logdirname(logdir_name);
+
+   LOG_DIR = fopen(logdir_name, "w");
    if(!LOG_DIR) {
         perror("Failed to create a log directory\n");
         return errno;
@@ -61,23 +66,21 @@ int create_logdir() {
 }
 
 //genearte a name for a logdir based on the current time
-char* generate_logdirname() {
-    char* dirname = "";
-
+int generate_logdirname(char* nameref) {
     //get the current time
     time_t now = time(NULL);
     struct tm* timeinfo = localtime(&now);
 
     //generate the file name
-    strftime(dirname, sizeof(dirname), "%Y-%m-%d_%H-%M-%S", timeinfo);
+    strftime(nameref, NAME_MAX, "%Y-%m-%d_%H-%M-%S", timeinfo);
 
-    return dirname;
+    return SUCCESSFUL;
 }
 
 //generate a new register logfile
-int createlog_register() {
+int createlog_register(char* logdirname) {
     //create the register logfile
-    LOG_REGISTER = fopen(strcat(LOGS_PATH, strcat(generate_logdirname(), strcat('/', REGISTER_LOGFILE_NAME))), "a");
+    LOG_REGISTER = fopen(strcat(LOGS_PATH, strcat(logdirname, strcat('/', REGISTER_LOGFILE_NAME))), "a");
     if(!LOG_REGISTER) {
         perror("Failed to create a register logfile.\n"); 
         return errno;
@@ -91,18 +94,32 @@ int createlog_register() {
 }
 
 //generate a new memory dump logfile
-int createlog_memorydmp() {
-    //create the memorydump logfile
-    LOG_MEMORY_DMP = fopen(strcat(LOGS_PATH, strcat(generate_logdirname(), strcat('/', MEMORYDMP_LOGFILE_NAME))), "a");
+int createlog_memorydmp(char* logdirname, Data* ndata, size_t length) {
+    //create the memory dump logfile
+    LOG_MEMORY_DMP = fopen(strcat(LOGS_PATH, strcat(logdirname, strcat('/', REGISTER_LOGFILE_NAME))), "a");
     if(!LOG_MEMORY_DMP) {
         perror("Failed to create a memory dump file.\n");
         return errno;
     }
 
-    //TOOD: append initial contents to the memorydump logfile
-    
+    /*
+        Append initial contents to the memory dump file
+        
+        The way this will work is that the function will be provided with a Data array containing the
+        addresses and values of all the memory words that have been changed in the IAS memory
+    */
+   for(address i = (address) 0; i<IAS_MEMORY_WORD_COUNT; i++) {
+        for(address j = (address) 0; j<length; j++) {
+            if(ndata[j].adr == i)  {
+                fprintf(LOG_MEMORY_DMP, "%i: %li\n", i, ndata[j].val);
+                continue;
+            }
+        }
 
-    return SUCCESSFUL;
+        fprintf(LOG_MEMORY_DMP, "%i: 0\n", i);
+   }
+
+   return SUCCESSFUL;
 }
 
 //update the register logfile
@@ -118,6 +135,7 @@ int updatelog_register(IAS* ias) {
 }
 
 //update the memory dump logfile
-int updatelog_memorydmp(IAS* ias) {
+int updatelog_memorydmp(Data* ndata, size_t length) {
     //TODO: Implement function
+
 }
