@@ -20,7 +20,7 @@ extern DIR* LOGS_DIR;
 extern DIR* LOG_DIR; //difference between it and LOGS_DIR is that the former stores the logs for a particular IAS program execution, while the latter is just a root directory for all the logs
 extern FILE* LOG_REGISTER;
 extern FILE* LOG_MEMORY_DMP;
-extern char* LOG_DIR_NAME;
+extern char LOG_DIR_NAME[NAME_MAX];
 extern word* MEMORY_DUMP_FILE_BUFFER;
 
 //constants
@@ -30,6 +30,7 @@ extern const char* LOGS_PATH_PREFIX_LINUX;
 extern const char* LOGS_PATH_POSTFIX;
 extern const size_t MEMORY_DUMP_FILE_BUFFER_SIZE;
 //function headers
+int startLogging(IAS* ias);
 int create_logspath(); //function that determines the logs path based on the current user's name
 bool exists_logsdir(); //function that checks whether the logs directory exists
 int create_logsdir(); //function that creates a new logs directory
@@ -37,9 +38,5 @@ int create_logsdir(); //function that creates a new logs directory
 int create_logdir(); //function that creates a new directory in which the register and memory dump logfiles will be created
 int generate_logdirname(); //function that generates a name for a logdir based on the current time
 int createlog_register(char* logdirname); //function that creates a new register logfile
-int createlog_memorydmp(char* logdirname, Data* ndata, size_t length); //function that creates a new memorydmp logfile
+int createlog_memorydmp(char* logdirname, IAS* ias); //function that creates a new memorydmp logfile
 int updatelog_register(char* logdirname, IAS* ias); //function that updates an existing register logfile
-int updatelog_memorydmp(char* logdirname, Data* ndata, size_t legnth); //function that updates an existing memorydmp logfile
-word* createMemorydmpFileBuffer(size_t size);
-int copyDataIntoMemdumpBuffer(Data* data, size_t length);
-bool hasChanged_word(address adr, Data* data, size_t length);

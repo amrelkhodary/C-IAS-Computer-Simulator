@@ -1,10 +1,12 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <stdint.h>
 #include <stdbool.h>
 #include <errno.h>
 #include <time.h>
 #include <linux/limits.h>
+#include <sys/stat.h>
 #include <sys/types.h>
 #include <dirent.h>
 #include "../headers/ias.h"
@@ -15,22 +17,62 @@
 char* LOGS_PATH = NULL;
 DIR* LOGS_DIR = NULL;
 DIR* LOG_DIR = NULL; //difference between it and LOGS_DIR is that the former stores the logs for a particular IAS program execution, while the latter is just a root directory for all the logs
-char* LOG_DIR_NAME[NAME_MAX];
+char LOG_DIR_NAME[NAME_MAX];
 FILE* LOG_REGISTER = NULL;
 FILE* LOG_MEMORY_DMP = NULL;
-char* MEMORY_DUMP_FILE_BUFFER;
 
 //constants
 const char* REGISTER_LOGFILE_NAME = "register_logs";
 const char* MEMORYDMP_LOGFILE_NAME = "memory_dump";
 const char* LOGS_PATH_PREFIX_LINUX = "/home/";
 const char* LOGS_PATH_POSTFIX = "/IAS_LOGS/";
-const size_t MEMORY_DUMP_FILE_BUFFER_SIZE = 1024;
+
+//initiate the logging module
+int startLogging(IAS* ias) {
+    int returnval;
+
+    //create a logs dir if it does not exist
+    returnval = create_logspath();
+    if(returnval != SUCCESSFUL) {
+        return returnval;
+    }
+    if(!exists_logsdir()) {
+       returnval = create_logsdir(); 
+       if(returnval != SUCCESSFUL) {
+            return returnval;
+       }
+    }
+
+    //create a new log dir specifically for the current execution
+    returnval = create_logdir();
+    if(returnval != SUCCESSFUL) {
+        return returnval;
+    }
+
+    //create a new register log file
+    returnval = createlog_register(LOG_DIR_NAME);
+    if(returnval != SUCCESSFUL) {
+        return returnval;
+    }
+
+    //create a new memory dump log file
+    returnval = createlog_memorydmp(LOG_DIR_NAME, ias);
+    if(returnval != SUCCESSFUL) {
+        return returnval;
+    }
+
+    return returnval;
+}
+
 //creates the logspath based on the username
 int create_logspath() {
     char* username = getenv("USER");
-    strcpy(LOGS_PATH, strcat(LOGS_PATH_PREFIX_LINUX, strcat(username, LOGS_PATH_POSTFIX)));
+    char LOCAL_PREFIX[256];
+    char LOCAL_POSTFIX[256];
     
+    strcpy(LOCAL_PREFIX, LOGS_PATH_PREFIX_LINUX);
+    strcpy(LOCAL_POSTFIX, LOGS_PATH_POSTFIX);
+    strcpy(LOGS_PATH, strcat(LOCAL_PREFIX, strcat(username, LOCAL_POSTFIX)));
     return SUCCESSFUL;
 }
 
@@ -58,13 +100,15 @@ int create_logsdir() {
 
 //creates a log directory for a specific execution
 int create_logdir() {
+   errno = 0; //setting errno to zero to check if it changes as calling mkdir as that would mean that an error occurred
    generate_logdirname();
-   LOG_DIR = mkdir(LOG_DIR_NAME, 755);
+   mkdir(LOG_DIR_NAME, 755);
 
-   if(!LOG_DIR) {
-        perror("Failed to create a log directory\n");
+   if(errno != 0) {
+        perror("Could not create a new log dir.\n");
         return errno;
    }
+
    return SUCCESSFUL;
 }
 
@@ -82,8 +126,15 @@ int generate_logdirname() {
 
 //generate a new register logfile
 int createlog_register(char* logdirname) {
+    //creating local copies of the global vars so that the global ones would not be affected
+    char LOCAL_LOGS_PATH[256];
+    char LOCAL_LOG_DIR_NAME[256];
+    char LOCAL_REGISTER_LOGFILE_NAME[256];
+    strcpy(LOCAL_LOGS_PATH, LOGS_PATH);
+    strcpy(LOCAL_LOG_DIR_NAME, logdirname);
+    strcpy(LOCAL_REGISTER_LOGFILE_NAME, REGISTER_LOGFILE_NAME);
     //create the register logfile
-    LOG_REGISTER = fopen(strcat(LOGS_PATH, strcat(logdirname, strcat('/', REGISTER_LOGFILE_NAME))), "a");
+    LOG_REGISTER = fopen(strcat(LOCAL_LOGS_PATH, strcat(LOCAL_LOG_DIR_NAME, strcat("/", LOCAL_REGISTER_LOGFILE_NAME))), "w");
     if(!LOG_REGISTER) {
         perror("Failed to create a register logfile.\n"); 
         return errno;
@@ -98,27 +149,24 @@ int createlog_register(char* logdirname) {
 }
 
 //generate a new memory dump logfile
-int createlog_memorydmp(char* logdirname, Data* ndata, size_t length) {
+int createlog_memorydmp(char* logdirname, IAS* ias) {
+    //create local copies of the global vars so that their values wouldn't change
+    char LOCAL_LOGS_PATH[256];
+    char LOCAL_LOG_DIR_NAME[256];
+    char LOCAL_MEMORY_DMP_FILENAME[256];
+    strcpy(LOCAL_LOGS_PATH, LOGS_PATH);
+    strcpy(LOCAL_LOG_DIR_NAME, logdirname);
+    strcpy(LOCAL_MEMORY_DMP_FILENAME, MEMORYDMP_LOGFILE_NAME);
     //create the memory dump logfile
-    LOG_MEMORY_DMP = fopen(strcat(LOGS_PATH, strcat(logdirname, strcat('/', REGISTER_LOGFILE_NAME))), "w");
+    LOG_MEMORY_DMP = fopen(strcat(LOCAL_LOGS_PATH, strcat(LOCAL_LOG_DIR_NAME, strcat("/", LOCAL_MEMORY_DMP_FILENAME))), "a");
     if(!LOG_MEMORY_DMP) {
         perror("Failed to create a memory dump file.\n");
         return errno;
     }
 
-    /*
-        Append initial contents to the memory dump file
-        
-        The way this will work is that the function will be provided with a Data array containing the
-        addresses and values of all the memory words that have been changed in the IAS memory
-    */
-   
-    //copy new data into memory dump file buffer
-    copyDataIntoMemdumpBuffer(ndata, length);
-
     //append contents of the the buffer to the memory dump file
-    for(int i = 0; i<MEMORY_DUMP_FILE_BUFFER_SIZE; i++) {
-        fprintf(LOG_MEMORY_DMP, "%i: %li\n", i, MEMORY_DUMP_FILE_BUFFER[i]);
+    for(int i = (address) 0; i<IAS_MEMORY_WORD_COUNT; i++) {
+        fprintf(LOG_MEMORY_DMP, "%i: %li\n", i, ias -> m -> memory[i]);
     }
 
    fclose(LOG_MEMORY_DMP);
@@ -126,40 +174,24 @@ int createlog_memorydmp(char* logdirname, Data* ndata, size_t length) {
 }
 
 //update the register logfile
-int updatelog_register(char* logdirname, IAS* ias) {
-    LOG_REGISTER = fopen(strcat(LOGS_PATH, strcat(logdirname, strcat('/', REGISTER_LOGFILE_NAME))), "a");
+int updatelog_register(char* logdirname, IAS* ias) {    //creating local copies of the global vars so that the global ones would not be affected
+    char LOCAL_LOGS_PATH[256];
+    char LOCAL_LOG_DIR_NAME[256];
+    char LOCAL_REGISTER_LOGFILE_NAME[256];
+    strcpy(LOCAL_LOGS_PATH, LOGS_PATH);
+    strcpy(LOCAL_LOG_DIR_NAME, logdirname);
+    strcpy(LOCAL_REGISTER_LOGFILE_NAME, REGISTER_LOGFILE_NAME);
+    //create the register logfile
+    LOG_REGISTER = fopen(strcat(LOCAL_LOGS_PATH, strcat(LOCAL_LOG_DIR_NAME, strcat("/", LOCAL_REGISTER_LOGFILE_NAME))), "a");
     if(!LOG_REGISTER) {
         fprintf(stderr, "Trying to update a register logfile that does not exist.\n");
         return FILE_DOES_NOT_EXIST;
     }
 
     fprintf(LOG_REGISTER, "PC: %i, IR: %i, MAR: %i, MBR: %li, IBR: %i, AC: %li, MQ: %li\n\n",
-            ias -> pc, ias -> ir, ias -> mar, ias -> mbr, ias -> ibr, ias -> ac, ias -> mq);
-    return SUCCESSFUL;
-}
-
-
-char* createMemorydmpFileBuffer(size_t size) {
-    char* buffer = (word*) calloc(size, sizeof(word));
-    if(!buffer) {
-        perror("Failed to allocate memory to memory dump file buffer.\n");
-        return NULL;
-    }
-
-    return buffer;
-}
-
-int copyDataIntoMemdumpBuffer(Data* data, size_t length) {
-    for(int i = 0; i<length; i++) {
-        MEMORY_DUMP_FILE_BUFFER[data[i].adr] = data[i].val;
-    }
+            ias -> pc -> register_value, ias -> ir -> register_value, ias -> mar -> register_value, ias -> mbr -> register_value
+            , ias -> ibr -> register_value, ias -> ac -> register_value, ias -> mq -> register_value);
     
+    fclose(LOG_REGISTER);
     return SUCCESSFUL;
-}
-
-bool hasChanged_word(address adr, Data* data, size_t length) {
-    for(int i = 0; i<length; i++) {
-        if(data[i].adr == adr) {return true;}
-    }
-    return false;
 }
