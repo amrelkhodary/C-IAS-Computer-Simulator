@@ -136,7 +136,7 @@ bool isdatastatement(char* buffer) {
 
     //now text should be "number,number"
     for(int i = 0; i<buffersize; i++) {
-        if(!(nowhitespace_buffer[i] == ',' || isdigit(nowhitespace_buffer[i]) || nowhitespace_buffer[i] == '\0')) {
+        if(!(nowhitespace_buffer[i] == ',' || isdigit(nowhitespace_buffer[i]) || nowhitespace_buffer[i] == '\0' || nowhitespace_buffer[i] == '-')) {
             return false;
         }
     }
@@ -215,6 +215,7 @@ char* ignoreSpaces(char* str) {
                 break;
             } else {
                 str++;
+                i--;
             }
         }
         else {
@@ -291,19 +292,19 @@ int extractInstruction(char* inststring) {
     else if(strcmp(ignoreSpaces(inststring), "LOADMQMX") == 0) {
         ninst.op = LOAD_MQ_MX;
     }
-    else if(strcmp(ignoreSpaces(inststring), "STOR_MX") == 0) {
+    else if(strcmp(ignoreSpaces(inststring), "STORMX") == 0) {
         ninst.op = STOR_MX;
     }
-    else if(strcmp(ignoreSpaces(inststring), "LOAD_MX") == 0) {
+    else if(strcmp(ignoreSpaces(inststring), "LOADMX") == 0) {
         ninst.op = LOAD_MX;
     }
-    else if(strcmp(ignoreSpaces(inststring), "LOAD_nMX") == 0) {
+    else if(strcmp(ignoreSpaces(inststring), "LOADNMX") == 0) {
         ninst.op = LOAD_nMX;
     }
-    else if(strcmp(ignoreSpaces(inststring), "LOAD_aMX") == 0) {
+    else if(strcmp(ignoreSpaces(inststring), "LOADAMX") == 0) {
         ninst.op = LOAD_aMX;
     }
-    else if(strcmp(ignoreSpaces(inststring), "LOAD_naMX") == 0) {
+    else if(strcmp(ignoreSpaces(inststring), "LOADNAMX") == 0) {
         ninst.op = LOAD_naMX;
     }
     else if(strcmp(ignoreSpaces(inststring), "JUMP") == 0) {
@@ -498,8 +499,7 @@ int load_program(IAS* ias, char* program_filepath) {
         return returnval;
     }
 
-    free(data_arr);
-    free(instruction_arr);
+    
     return SUCCESSFUL;
 }
 
@@ -515,4 +515,11 @@ void debug_printInstructions() {
     for(int i = 0; i<ins_arr_index; i++) {
         printf("opcode: %i, address: %i\n", instruction_arr[i].op, instruction_arr[i].adr);
     }
+}
+
+int freeProgramLoader() {
+    free(data_arr);
+    free(instruction_arr);
+
+    return SUCCESSFUL;
 }

@@ -128,7 +128,6 @@ int createlog_register(char* logdirname) {
     //constructing the name of the file to open
     char buffer[256];
     snprintf(buffer, 256, "%s%s/%s", LOGS_PATH, LOG_DIR_NAME, REGISTER_LOGFILE_NAME);
-    printf("buffer: %s\n", buffer);
     //create the register logfile
     LOG_REGISTER = fopen(buffer, "w");
     if(!LOG_REGISTER) {
@@ -137,7 +136,26 @@ int createlog_register(char* logdirname) {
     }
 
     //append initial contents to the register file
-    fprintf(LOG_REGISTER, "Cycle 0:-\n");
+    //explain values to the user
+    fprintf(LOG_REGISTER, "REGISTER LOG EXPLAINED:\n\n"
+       "1. A new register log entry is added after each fetch-execute cycle of the IAS computer.\n\n"
+       "2. PC (Program Counter): Contains the memory address of the current instruction.\n"
+       "   Example: PC=10 means the computer is executing the instruction at memory location 10.\n\n"
+       "3. IR (Instruction Register): Holds the current instruction's opcode.\n"
+       "   Example: IR=5 means the current operation is a LOAD instruction.\n\n"
+       "4. MAR (Memory Address Register): Contains the memory address being accessed.\n"
+       "   Example: MAR=25 means the computer is accessing data at memory location 25.\n\n"
+       "5. MBR (Memory Buffer Register): Contains data just read from or about to be written to memory.\n"
+       "   Example: MBR=42 means the value 42 was just fetched from memory.\n\n"
+       "6. IBR (Instruction Buffer Register): In a real IAS, this would hold the right instruction from a memory word.\n"
+       "   Note: This simulator only uses left instructions in each memory word, so IBR will remain empty.\n\n"
+       "7. AC (Accumulator): The main register for arithmetic operations and results.\n"
+       "   Very large values often indicate negative numbers due to two's complement representation.\n"
+       "   Example: AC=1099511627766 represents -10 in 40-bit two's complement.\n\n"
+       "8. MQ (Multiplier-Quotient): Used for multiplication and division operations.\n"
+       "   Like AC, large values may represent negative numbers in two's complement.\n"
+       "   Example: AC=1099511627768 represents -8 in 40-bit two's complement.\n\n");
+       
     fprintf(LOG_REGISTER, "PC: 0, IR: 0, MAR: 0, MBR: 0, IBR: 0, AC: 0, MQ: 0\n\n");
 
     fclose(LOG_REGISTER);
@@ -191,5 +209,12 @@ int updatelog_register(char* logdirname, IAS* ias) {    //creating local copies 
             , ias -> ibr -> register_value, ias -> ac -> register_value, ias -> mq -> register_value);
     
     fclose(LOG_REGISTER);
+    return SUCCESSFUL;
+}
+
+int freeLogs() {
+    free(LOGS_PATH);
+    free(LOG_DIR_NAME);
+
     return SUCCESSFUL;
 }

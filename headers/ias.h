@@ -126,7 +126,7 @@
     word negative(word number);
     word absoluteval(word number);
     int setmem(IAS* ias, address adr, word value);
-
+    int freeIAS(IAS* ias);
     int loadmq(IAS* ias);
     int loadmqmx(IAS* ias);
     int stormx(IAS* ias);

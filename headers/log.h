@@ -40,3 +40,4 @@ int generate_logdirname(); //function that generates a name for a logdir based o
 int createlog_register(char* logdirname); //function that creates a new register logfile
 int createlog_memorydmp(char* logdirname, IAS* ias); //function that creates a new memorydmp logfile
 int updatelog_register(char* logdirname, IAS* ias); //function that updates an existing register logfile
+int freeLogs();

@@ -40,3 +40,4 @@ int loadInstructions(IAS* ias, Instruction* instruction_arr);
 int load_program(IAS* ias, char* program_filepath);
 void debug_printData();
 void debug_printInstructions();
+int freeProgramLoader();

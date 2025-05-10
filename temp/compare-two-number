@@ -1,0 +1,14 @@
+#this program compares two numbers and returns the biggest
+
+data:
+	#address, value
+	900, -10
+	901, -20
+program:
+	#opcode address
+	ADDMX 900
+	SUBMX 901
+	CJUMP 5
+	LOADMX 901
+	JUMP 20 #address containing no instructions, this is effectively a "halt" instruction
+	LOADMX 900

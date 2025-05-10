@@ -7,6 +7,7 @@
 #include <stdbool.h>
 #include <math.h>
 #include <dirent.h>
+#include <errno.h>
 #include "../headers/ias.h"
 #include "../headers/tests.h"
 #include "../headers/program_loader.h"
@@ -57,7 +58,51 @@ const bool DONT_IGNORE_OVERFLOW = false;
 const int IAS_MEMORY_WORD_COUNT = 1024;
 
 int main(int argc, char** argv) {
+    //exit code for the program
+    int exit_code;
+    //make sure the user provided only one argument and that that arguemnt is a valid file
+    if(argc != 2) {
+        fprintf(stderr, "Too many arguments passed to IAS, make sure you only pass the filename of the program you want to execute.\n");
+        return FATAL_INVALID_PROGRAM_ARGUMENTS;
+    }
+
+    FILE* programfile = fopen(argv[1], "r");
+    if(!programfile) {
+        perror("Could not open program file");
+        return errno;
+    }
+    fclose(programfile);
+
+    //create an instace of the IAS computer
     IAS* ias = startIAS();
-    startLogging(ias);
+
+    //start the logging module
+    exit_code = startLogging(ias);
+    if(exit_code != SUCCESSFUL) {
+        printf("\033[1;31mYour program was not executed successfully!\033[0m\nIf you think there were any issues or bugs with IAS, please send an email at \033[4;36mamrelkhodarybusiness@gmail.com\033[0m.\n");
+        return exit_code;
+    }
+
+    //load the program and data into IAS memory
+    exit_code = load_program(ias, argv[1]);
+    if(exit_code != SUCCESSFUL) {
+        printf("\033[1;31mYour program was not executed successfully!\033[0m\nIf you think there were any issues or bugs with IAS, please send an email at \033[4;36mamrelkhodarybusiness@gmail.com\033[0m.\n");
+        return exit_code;
+    }
+
+    //run the IAS computer
+    exit_code = run(ias);
+    if(exit_code != SUCCESSFUL) {
+        printf("\033[1;31mYour program was not executed successfully!\033[0m\nIf you think there were any issues or bugs with IAS, please send an email at \033[4;36mamrelkhodarybusiness@gmail.com\033[0m.\n");
+        return exit_code;
+    } 
+
+    //free all the dynamically allocated memory used by the program
+    freeLogs();
+    freeProgramLoader();   
+    freeIAS(ias);
+
+    //print a message to the user instructing him where to find logs
+    printf("\033[1;32mYour program was executed successfully!\033[0m \nRegister and memory dump logsfiles have been generated under \033[1m~/IAS_LOGS\033[0m.\nIf you think there were any issues or bugs with IAS, please send an email at \033[4;36mamrelkhodarybusiness@gmail.com\033[0m.\n");
     return 0;
 }

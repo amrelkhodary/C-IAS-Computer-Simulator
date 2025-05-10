@@ -7,7 +7,9 @@
 #include <stdint.h>
 #include <stdbool.h>
 #include <math.h>
+#include <dirent.h>
 #include "../headers/ias.h"
+#include "../headers/log.h"
 
 IAS* startIAS() {
     IAS* ias = (IAS*) malloc(sizeof(IAS));
@@ -54,10 +56,16 @@ IAS* startIAS() {
 int run(IAS* ias) {
     int exec_return_val = -1;
     while(exec_return_val != UNRECOGNIZED_COMMAND) {
+        //run the fetch execute cycle
         fetch(ias);
         exec_return_val = execute(ias);
+        
+        //update the register value log after every cycle
+        updatelog_register(LOG_DIR_NAME, ias);
     }
 
+    //create a memory dump when the program is over
+    createlog_memorydmp(LOG_DIR_NAME, ias);
     return SUCCESSFUL;
 }
 
@@ -309,7 +317,7 @@ int jumprmx(IAS* ias) {
 
 //if AC is nonnegative, take instruction from left half of memory location X 
 int cjumplmx(IAS* ias) {
-    if(ias -> ac -> register_value > (word) 0) {
+    if(!isNegative(ias -> ac -> register_value)) {
         jumplmx(ias);
     }
     return 0;
@@ -317,7 +325,7 @@ int cjumplmx(IAS* ias) {
 
 //if AC is nonnegative, take instruction from right half of memory location X
 int cjumprmx(IAS* ias) {
-    if(ias -> ac -> register_value > (word) 0) {
+    if(!isNegative(ias -> ac -> register_value)) {
         jumprmx(ias);
     }
     return 0;
@@ -485,8 +493,8 @@ int divmx(IAS* ias) {
     bool isnegative_mbr = isNegative(ias -> mbr -> register_value);
 
     //divide, store result in AC, remainder in MQ
-    ias -> mq -> register_value = (absoluteval(ias -> mq -> register_value) & NUMBER_VALUE_MASK) % (absoluteval(ias -> mbr -> register_value) & NUMBER_VALUE_MASK);
-    ias -> ac -> register_value = (absoluteval(ias -> ac -> register_value) & NUMBER_VALUE_MASK) / (absoluteval(ias -> mbr -> register_value) & NUMBER_VALUE_MASK);
+    ias -> mq -> register_value = (absoluteval(ias -> ac -> register_value) & NUMBER_VALUE_MASK) % (absoluteval(ias -> mbr -> register_value) & NUMBER_VALUE_MASK);
+    ias -> ac -> register_value = (word) (absoluteval(ias -> ac -> register_value) & NUMBER_VALUE_MASK) / (absoluteval(ias -> mbr -> register_value) & NUMBER_VALUE_MASK);
 
     //determine sign bit
     if((isnegative_ac && isnegative_mbr) || (!isnegative_ac && !isnegative_mbr)) {
@@ -565,3 +573,19 @@ int storrmx(IAS* ias) {
 /*
      0-7 8-19 20-27 28-39
 */
+
+//free all the memory used by the IAS computer instance
+int freeIAS(IAS* ias) {
+    free(ias -> ac);
+    free(ias -> mq);
+    free(ias -> ir);
+    free(ias -> mar);
+    free(ias -> mbr);
+    free(ias -> ibr);
+    free(ias -> pc);
+    free(ias -> m -> memory);
+    free(ias -> m);
+    
+    free(ias);
+    return SUCCESSFUL;
+}

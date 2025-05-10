@@ -1,0 +1,21 @@
+#this program computes the sum of numbers from 1 to 10 using the sum formula
+
+data:
+	#address, value
+	900, 10 
+	901, 1 
+	902, 2
+
+program:	
+	#opcode address
+
+	#load n to AC and add one to it
+	LOADMX 900
+	ADDMX 901
+			
+	#multiply n+1 by n
+	MULMX 900
+	
+	#divide n(n+1) by 2
+	DIVMX 902
+
