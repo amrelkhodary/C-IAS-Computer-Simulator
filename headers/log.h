@@ -20,7 +20,7 @@ extern DIR* LOGS_DIR;
 extern DIR* LOG_DIR; //difference between it and LOGS_DIR is that the former stores the logs for a particular IAS program execution, while the latter is just a root directory for all the logs
 extern FILE* LOG_REGISTER;
 extern FILE* LOG_MEMORY_DMP;
-extern char LOG_DIR_NAME[NAME_MAX];
+extern char* LOG_DIR_NAME;
 extern word* MEMORY_DUMP_FILE_BUFFER;
 
 //constants

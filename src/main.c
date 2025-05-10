@@ -6,9 +6,11 @@
 #include <stdint.h>
 #include <stdbool.h>
 #include <math.h>
+#include <dirent.h>
 #include "../headers/ias.h"
 #include "../headers/tests.h"
 #include "../headers/program_loader.h"
+#include "../headers/log.h"
 //defining program constants
 const opcode LOAD_MQ    = (opcode) 0b00001010; //transfer contents of MQ to AC 
 const opcode LOAD_MQ_MX = (opcode) 0b00001001; //transfer contents of memory location X to MQ
@@ -55,14 +57,7 @@ const bool DONT_IGNORE_OVERFLOW = false;
 const int IAS_MEMORY_WORD_COUNT = 1024;
 
 int main(int argc, char** argv) {
-    //take inputs and flags
-
-    //create ias instance
-
-    //load the program
-     
-    //run the program
-
-    runtests();
+    IAS* ias = startIAS();
+    startLogging(ias);
     return 0;
 }

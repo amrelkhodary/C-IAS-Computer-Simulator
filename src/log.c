@@ -1,3 +1,4 @@
+//TODO: Fix strcat bugs
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -17,7 +18,7 @@
 char* LOGS_PATH = NULL;
 DIR* LOGS_DIR = NULL;
 DIR* LOG_DIR = NULL; //difference between it and LOGS_DIR is that the former stores the logs for a particular IAS program execution, while the latter is just a root directory for all the logs
-char LOG_DIR_NAME[NAME_MAX];
+char* LOG_DIR_NAME;
 FILE* LOG_REGISTER = NULL;
 FILE* LOG_MEMORY_DMP = NULL;
 
@@ -55,24 +56,15 @@ int startLogging(IAS* ias) {
         return returnval;
     }
 
-    //create a new memory dump log file
-    returnval = createlog_memorydmp(LOG_DIR_NAME, ias);
-    if(returnval != SUCCESSFUL) {
-        return returnval;
-    }
-
     return returnval;
 }
 
 //creates the logspath based on the username
 int create_logspath() {
     char* username = getenv("USER");
-    char LOCAL_PREFIX[256];
-    char LOCAL_POSTFIX[256];
-    
-    strcpy(LOCAL_PREFIX, LOGS_PATH_PREFIX_LINUX);
-    strcpy(LOCAL_POSTFIX, LOGS_PATH_POSTFIX);
-    strcpy(LOGS_PATH, strcat(LOCAL_PREFIX, strcat(username, LOCAL_POSTFIX)));
+    LOGS_PATH = (char*) malloc(256 * sizeof(char));
+
+    snprintf(LOGS_PATH, 256, "%s%s%s", LOGS_PATH_PREFIX_LINUX, username, LOGS_PATH_POSTFIX);
     return SUCCESSFUL;
 }
 
@@ -89,9 +81,9 @@ bool exists_logsdir() {
 
 //creates a logs directory
 int create_logsdir() {
-    const int status = mkdir(LOGS_PATH, 755);
+    const int status = mkdir(LOGS_PATH, 0755);
     if(status != 0) {
-        perror("Failed to create a logs directory.\n");
+        perror("Failed to create a logs directory");
         return errno;
     }
 
@@ -102,10 +94,15 @@ int create_logsdir() {
 int create_logdir() {
    errno = 0; //setting errno to zero to check if it changes as calling mkdir as that would mean that an error occurred
    generate_logdirname();
-   mkdir(LOG_DIR_NAME, 755);
+   //construct the path to the directory
+   char buffer[256];
+   snprintf(buffer, 256, "%s%s", LOGS_PATH, LOG_DIR_NAME);
+
+   //create the directory
+   mkdir(buffer, 0755);
 
    if(errno != 0) {
-        perror("Could not create a new log dir.\n");
+        perror("Could not create a new log dir");
         return errno;
    }
 
@@ -114,6 +111,8 @@ int create_logdir() {
 
 //genearte a name for a logdir based on the current time
 int generate_logdirname() {
+    //allocate memory for the name buffer
+    LOG_DIR_NAME = (char*) malloc(256 * sizeof(char));
     //get the current time
     time_t now = time(NULL);
     struct tm* timeinfo = localtime(&now);
@@ -126,17 +125,14 @@ int generate_logdirname() {
 
 //generate a new register logfile
 int createlog_register(char* logdirname) {
-    //creating local copies of the global vars so that the global ones would not be affected
-    char LOCAL_LOGS_PATH[256];
-    char LOCAL_LOG_DIR_NAME[256];
-    char LOCAL_REGISTER_LOGFILE_NAME[256];
-    strcpy(LOCAL_LOGS_PATH, LOGS_PATH);
-    strcpy(LOCAL_LOG_DIR_NAME, logdirname);
-    strcpy(LOCAL_REGISTER_LOGFILE_NAME, REGISTER_LOGFILE_NAME);
+    //constructing the name of the file to open
+    char buffer[256];
+    snprintf(buffer, 256, "%s%s/%s", LOGS_PATH, LOG_DIR_NAME, REGISTER_LOGFILE_NAME);
+    printf("buffer: %s\n", buffer);
     //create the register logfile
-    LOG_REGISTER = fopen(strcat(LOCAL_LOGS_PATH, strcat(LOCAL_LOG_DIR_NAME, strcat("/", LOCAL_REGISTER_LOGFILE_NAME))), "w");
+    LOG_REGISTER = fopen(buffer, "w");
     if(!LOG_REGISTER) {
-        perror("Failed to create a register logfile.\n"); 
+        perror("Failed to create a register logfile"); 
         return errno;
     }
 
@@ -150,17 +146,14 @@ int createlog_register(char* logdirname) {
 
 //generate a new memory dump logfile
 int createlog_memorydmp(char* logdirname, IAS* ias) {
-    //create local copies of the global vars so that their values wouldn't change
-    char LOCAL_LOGS_PATH[256];
-    char LOCAL_LOG_DIR_NAME[256];
-    char LOCAL_MEMORY_DMP_FILENAME[256];
-    strcpy(LOCAL_LOGS_PATH, LOGS_PATH);
-    strcpy(LOCAL_LOG_DIR_NAME, logdirname);
-    strcpy(LOCAL_MEMORY_DMP_FILENAME, MEMORYDMP_LOGFILE_NAME);
+    //construct the name of the memory dump file 
+    char buffer[256];
+    snprintf(buffer, 256, "%s%s/%s", LOGS_PATH, LOG_DIR_NAME, MEMORYDMP_LOGFILE_NAME);
+    
     //create the memory dump logfile
-    LOG_MEMORY_DMP = fopen(strcat(LOCAL_LOGS_PATH, strcat(LOCAL_LOG_DIR_NAME, strcat("/", LOCAL_MEMORY_DMP_FILENAME))), "a");
+    LOG_MEMORY_DMP = fopen(buffer, "a");
     if(!LOG_MEMORY_DMP) {
-        perror("Failed to create a memory dump file.\n");
+        perror("Failed to create a memory dump file");
         return errno;
     }
 
@@ -175,14 +168,19 @@ int createlog_memorydmp(char* logdirname, IAS* ias) {
 
 //update the register logfile
 int updatelog_register(char* logdirname, IAS* ias) {    //creating local copies of the global vars so that the global ones would not be affected
-    char LOCAL_LOGS_PATH[256];
+    /*char LOCAL_LOGS_PATH[256];
     char LOCAL_LOG_DIR_NAME[256];
     char LOCAL_REGISTER_LOGFILE_NAME[256];
     strcpy(LOCAL_LOGS_PATH, LOGS_PATH);
     strcpy(LOCAL_LOG_DIR_NAME, logdirname);
-    strcpy(LOCAL_REGISTER_LOGFILE_NAME, REGISTER_LOGFILE_NAME);
+    strcpy(LOCAL_REGISTER_LOGFILE_NAME, REGISTER_LOGFILE_NAME);*/
+
+    //construct the name of the register logfile
+    char buffer[256];
+    snprintf(buffer, 256, "%s%s/%s", LOGS_PATH, LOG_DIR_NAME, REGISTER_LOGFILE_NAME);
+
     //create the register logfile
-    LOG_REGISTER = fopen(strcat(LOCAL_LOGS_PATH, strcat(LOCAL_LOG_DIR_NAME, strcat("/", LOCAL_REGISTER_LOGFILE_NAME))), "a");
+    LOG_REGISTER = fopen(buffer, "a");
     if(!LOG_REGISTER) {
         fprintf(stderr, "Trying to update a register logfile that does not exist.\n");
         return FILE_DOES_NOT_EXIST;
