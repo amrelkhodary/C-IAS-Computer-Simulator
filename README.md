@@ -89,60 +89,27 @@ STORMX 902    # Store result
 
 ### Example 2: Computing a Sum from 1 to N
 ```
-# Calculate sum of integers from 1 to N
+#this program computes the sum of numbers from 1 to 10 using the sum formula
+
 data:
-900, 10    # N = 10
-901, 0     # Sum (initialized to 0)
-902, 1     # Constant 1 (increment)
-903, 1     # Counter (starts at 1)
+	#address, value
+	900, 10 
+	901, 1 
+	902, 2
 
-program:
-# Initialize
-LOADMX 901    # Load initial sum (0)
-  
-# Main loop
-LOOP:
-  ADDMX 903   # Add current counter value
-  STORMX 901  # Store running sum
-  
-  # Increment counter
-  LOADMX 903
-  ADDMX 902   # Add 1
-  STORMX 903  # Update counter
-  
-  # Check if counter <= N
-  SUBMX 900
-  CJUMP END   # If counter > N, exit
-  JUMP LOOP   # Otherwise, continue
+program:	
+	#opcode address
 
-END:
-  # Result is in memory location 901
-```
+	#load n to AC and add one to it
+	LOADMX 900
+	ADDMX 901
+			
+	#multiply n+1 by n
+	MULMX 900
+	
+	#divide n(n+1) by 2
+	DIVMX 902
 
-### Example 3: Finding Maximum Value
-```
-# Find maximum of two values
-data:
-900, 15    # First value
-901, 27    # Second value
-902, 0     # Will contain maximum
-
-program:
-LOADMX 900       # Load first value
-SUBMX 901        # Subtract second value
-CJUMP FIRST_BIGGER  # Jump if result is non-negative
-
-# Second is bigger
-LOADMX 901
-STORMX 902
-JUMP END
-
-FIRST_BIGGER:
-LOADMX 900
-STORMX 902
-
-END:
-# Maximum is now in memory location 902
 ```
 
 ## Historical Context
