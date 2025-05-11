@@ -12,8 +12,8 @@ git clone https://github.com/amrelkhodary/C-IAS-Computer-Simulator.git
 cd C-IAS-Computer-Simulator
 
 # Run the installation script
-chmod +x install.sh
-./install.sh
+chmod +x linux-install.sh
+./linux-install.sh
 ```
 
 The installer will:
