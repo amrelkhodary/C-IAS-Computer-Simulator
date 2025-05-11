@@ -1,0 +1,57 @@
+#this program simualtes functions in IAS
+
+data:
+        # START ADD(x,y) FUNCTION ARGUMENTS
+        500, 0 # x
+        501, 0 # y
+        # END FUNCTION ARGUMENTS
+
+        # START CONSTANTS
+        902, 0 #zero
+        903, 10 #integer literal x passed to ADD(x,y)
+        904, 20 #integer literal y passed to ADD(x,y)
+        # END CONSTANTS 
+
+        #START LOCAL VARIABLE ADDRESSES
+        100, 200 # result
+        101, 201 # local_x
+        102, 202 # local_y
+        #END LOCAL VARIABLES ADDRESSES
+program:
+        #initialize result to 0
+        LOADMX 902
+        STORMX 200
+
+        #set local_x
+        LOADMX 903
+        STORMX 201
+
+        #set local_y
+        LOADMX 904
+        STORMX 202
+
+        #call the ADD(x,y) function
+        JUMP 8
+
+        #halt the program
+        JUMP 20
+
+
+        # START ADD(x,y) FUNCTION
+                #load the values of the arguments and store them as local varaibles in the function
+                LOADMX 201
+                STORMX 500
+                LOADMX 202
+                STORMX 501
+
+                #load the value of x and them add the value of y to it
+                LOADMX 500
+                ADDMX 501
+
+                #store the result in the result argument passed to the function
+                STORMX 200
+
+                #exit the function
+                JUMP 7
+
+        # END ADD(x,y) FUNCTION
