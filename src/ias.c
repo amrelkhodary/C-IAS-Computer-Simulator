@@ -549,6 +549,7 @@ int lsh(IAS* ias) {
 
 //replace left address by 12 rightmost bits in AC
 int storlmx(IAS* ias) {
+    /*0-7 8-19 20-27 28-39*/
     ias -> ac -> register_value = ias -> ac -> register_value & AC_ADDRESS_MASK;
     ias -> ac -> register_value = ias -> ac -> register_value << 20;
     ias -> mbr -> register_value = ias -> m -> memory[ias -> mar -> register_value];

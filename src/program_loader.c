@@ -346,6 +346,7 @@ int extractInstruction(char* inststring) {
 
     //extract address
     if(address_substr) {ninst.adr = extractNumber(ignoreSpaces(address_substr));} 
+    else if(ninst.op == RSH || ninst.op == LSH) {ninst.adr = 0;}
     else {fprintf(stderr, "Could not extract address from instruction.\n"); return SYNTAX_ERROR;}
     //add instruction to instruction array
     if(ins_arr_index == instruction_initial_size) {
